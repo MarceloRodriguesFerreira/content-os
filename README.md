@@ -1,3 +1,32 @@
+# Content OS
+
+## O que é?
+
+(Content OS será descrito aqui.)
+
+## Tecnologias
+
+- Next.js
+- NestJS
+- PostgreSQL
+- Prisma
+- Turborepo
+
+## Estrutura
+
+apps/
+packages/
+engineering/
+docs/
+
+## Como executar
+
+(em construção)
+
+## Roadmap
+
+(ver PROJECT_STATUS.md)
+
 # Turborepo starter
 
 This Turborepo starter is maintained by the Turborepo core team.
