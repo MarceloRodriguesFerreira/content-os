@@ -1,0 +1,53 @@
+services:
+
+  postgres:
+
+    image: postgres:16
+
+    container_name: content-os-postgres
+
+    restart: unless-stopped
+
+    environment:
+
+      POSTGRES_DB: content_os
+
+      POSTGRES_USER: content_os
+
+      POSTGRES_PASSWORD: content_os
+
+      TZ: America/Sao_Paulo
+
+    ports:
+
+      - "5432:5432"
+
+    volumes:
+
+      - content-os-postgres-data:/var/lib/postgresql/data
+
+      - ./postgres/init:/docker-entrypoint-initdb.d
+
+    networks:
+
+      - content-os-network
+
+    healthcheck:
+
+      test: ["CMD-SHELL", "pg_isready -U content_os"]
+
+      interval: 10s
+
+      timeout: 5s
+
+      retries: 5
+
+volumes:
+
+  content-os-postgres-data:
+
+networks:
+
+  content-os-network:
+
+  
