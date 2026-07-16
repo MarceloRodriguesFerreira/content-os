@@ -19,3 +19,9 @@ feature/<nome>
 ## Commits
 
 Conventional Commits.
+
+## Pull Requests
+
+- Manter as alterações pequenas e focadas.
+- Atualizar a documentação quando necessário.
+- Garantir que a aplicação compile antes de abrir o PR.

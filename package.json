@@ -1,5 +1,5 @@
 {
-  "name": "contente-os",
+  "name": "content-os",
   "private": true,
   "scripts": {
     "build": "turbo run build",
