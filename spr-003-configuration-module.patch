@@ -1,0 +1,652 @@
+diff --git a/apps/api/package.json b/apps/api/package.json
+index b37ae87..0e13c32 100644
+--- a/apps/api/package.json
++++ b/apps/api/package.json
+@@ -21,11 +21,14 @@
+   },
+   "dependencies": {
+     "@nestjs/common": "^11.0.1",
++    "@nestjs/config": "^4.0.4",
+     "@nestjs/core": "^11.0.1",
+     "@nestjs/mapped-types": "*",
+     "@nestjs/platform-express": "^11.0.1",
+     "@prisma/adapter-pg": "^7.8.0",
+     "@prisma/client": "^7.8.0",
++    "class-transformer": "^0.5.1",
++    "class-validator": "^0.15.1",
+     "pg": "^8.22.0",
+     "reflect-metadata": "^0.2.2",
+     "rxjs": "^7.8.1"
+diff --git a/apps/api/src/app.module.ts b/apps/api/src/app.module.ts
+index af60070..d2f6efe 100644
+--- a/apps/api/src/app.module.ts
++++ b/apps/api/src/app.module.ts
+@@ -5,17 +5,11 @@ import { AppService } from './app.service';
+ 
+ import { HealthModule } from './modules/health/health.module';
+ import { PrismaModule } from './prisma/prisma.module';
++import { ConfigModule } from './config/config.module';
+ 
+ @Module({
+-  imports: [
+-    PrismaModule,
+-    HealthModule,
+-  ],
+-  controllers: [
+-    AppController,
+-  ],
+-  providers: [
+-    AppService,
+-  ],
++  imports: [ConfigModule, PrismaModule, HealthModule],
++  controllers: [AppController],
++  providers: [AppService],
+ })
+ export class AppModule {}
+diff --git a/apps/api/src/config/config.module.ts b/apps/api/src/config/config.module.ts
+new file mode 100644
+index 0000000..a91090d
+--- /dev/null
++++ b/apps/api/src/config/config.module.ts
+@@ -0,0 +1,26 @@
++import { Global, Module } from '@nestjs/common';
++import { ConfigModule as NestConfigModule } from '@nestjs/config';
++
++import configuration from './configuration';
++import { AppConfigService } from './config.service';
++import { validate } from './env.validation';
++
++/**
++ * Módulo global de configuração da aplicação.
++ * Marcado como @Global() para seguir o mesmo padrão já usado pelo
++ * PrismaModule, já que AppConfigService é uma dependência transversal
++ * consumida por múltiplos módulos (Prisma, Health, etc.).
++ */
++@Global()
++@Module({
++  imports: [
++    NestConfigModule.forRoot({
++      isGlobal: true,
++      load: [configuration],
++      validate,
++    }),
++  ],
++  providers: [AppConfigService],
++  exports: [AppConfigService],
++})
++export class ConfigModule {}
+diff --git a/apps/api/src/config/config.service.ts b/apps/api/src/config/config.service.ts
+new file mode 100644
+index 0000000..f38528a
+--- /dev/null
++++ b/apps/api/src/config/config.service.ts
+@@ -0,0 +1,33 @@
++import { Injectable } from '@nestjs/common';
++import { ConfigService } from '@nestjs/config';
++import { AppConfig } from './configuration';
++
++/**
++ * Wrapper tipado sobre o ConfigService do @nestjs/config.
++ * Todo o resto da aplicação deve depender deste serviço (e não do
++ * ConfigService genérico, nem de process.env) para ler configuração.
++ */
++@Injectable()
++export class AppConfigService {
++  constructor(private readonly configService: ConfigService<AppConfig, true>) {}
++
++  get nodeEnv(): string {
++    return this.configService.get('nodeEnv', { infer: true });
++  }
++
++  get port(): number {
++    return this.configService.get('port', { infer: true });
++  }
++
++  get appName(): string {
++    return this.configService.get('app.name', { infer: true });
++  }
++
++  get appVersion(): string {
++    return this.configService.get('app.version', { infer: true });
++  }
++
++  get databaseUrl(): string {
++    return this.configService.get('database.url', { infer: true });
++  }
++}
+diff --git a/apps/api/src/config/configuration.ts b/apps/api/src/config/configuration.ts
+new file mode 100644
+index 0000000..e0304ea
+--- /dev/null
++++ b/apps/api/src/config/configuration.ts
+@@ -0,0 +1,28 @@
++export interface AppConfig {
++  nodeEnv: string;
++  port: number;
++  app: {
++    name: string;
++    version: string;
++  };
++  database: {
++    url: string;
++  };
++}
++
++/**
++ * Única função da aplicação autorizada a ler `process.env` diretamente.
++ * É registrada via `ConfigModule.forRoot({ load: [configuration] })` e
++ * roda depois que `env.validation.ts` já validou as variáveis obrigatórias.
++ */
++export default (): AppConfig => ({
++  nodeEnv: process.env.NODE_ENV ?? 'development',
++  port: parseInt(process.env.PORT ?? '3001', 10),
++  app: {
++    name: process.env.APP_NAME ?? 'Content OS',
++    version: process.env.APP_VERSION ?? '0.0.0',
++  },
++  database: {
++    url: process.env.DATABASE_URL ?? '',
++  },
++});
+diff --git a/apps/api/src/config/env.validation.ts b/apps/api/src/config/env.validation.ts
+new file mode 100644
+index 0000000..741cb6f
+--- /dev/null
++++ b/apps/api/src/config/env.validation.ts
+@@ -0,0 +1,60 @@
++import { plainToInstance } from 'class-transformer';
++import {
++  IsEnum,
++  IsInt,
++  IsNotEmpty,
++  IsString,
++  Max,
++  Min,
++  validateSync,
++} from 'class-validator';
++
++enum Environment {
++  Development = 'development',
++  Production = 'production',
++  Test = 'test',
++}
++
++class EnvironmentVariables {
++  @IsEnum(Environment)
++  NODE_ENV: Environment;
++
++  @IsInt()
++  @Min(1)
++  @Max(65535)
++  PORT: number;
++
++  @IsString()
++  @IsNotEmpty()
++  DATABASE_URL: string;
++
++  @IsString()
++  @IsNotEmpty()
++  APP_NAME: string;
++
++  @IsString()
++  @IsNotEmpty()
++  APP_VERSION: string;
++}
++
++/**
++ * Função de validação passada para `ConfigModule.forRoot({ validate })`.
++ * Se alguma variável obrigatória estiver ausente ou inválida, o boot da
++ * aplicação falha imediatamente com uma mensagem descritiva, em vez de
++ * falhar silenciosamente mais tarde em runtime (ex: connection string vazia).
++ */
++export function validate(config: Record<string, unknown>) {
++  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
++    enableImplicitConversion: true,
++  });
++
++  const errors = validateSync(validatedConfig, {
++    skipMissingProperties: false,
++  });
++
++  if (errors.length > 0) {
++    throw new Error(`Configuração de ambiente inválida:\n${errors.toString()}`);
++  }
++
++  return validatedConfig;
++}
+diff --git a/apps/api/src/main.ts b/apps/api/src/main.ts
+index bf37d86..4069e15 100644
+--- a/apps/api/src/main.ts
++++ b/apps/api/src/main.ts
+@@ -1,12 +1,14 @@
+-import 'dotenv/config';
+ import { NestFactory } from '@nestjs/core';
+ import { AppModule } from './app.module';
++import { AppConfigService } from './config/config.service';
+ 
+ async function bootstrap() {
+   const app = await NestFactory.create(AppModule);
+-  await app.listen(process.env.PORT ?? 3001);
++  const configService = app.get(AppConfigService);
+ 
+-  console.log('🚀 API running on http://localhost:3001');
++  await app.listen(configService.port);
++
++  console.log(`🚀 API running on http://localhost:${configService.port}`);
+ }
+ 
+-bootstrap();
+\ No newline at end of file
++bootstrap();
+diff --git a/apps/api/src/modules/health/health.controller.ts b/apps/api/src/modules/health/health.controller.ts
+index 0e74ac6..0bb4840 100644
+--- a/apps/api/src/modules/health/health.controller.ts
++++ b/apps/api/src/modules/health/health.controller.ts
+@@ -1,4 +1,3 @@
+-
+ import { Controller, Get } from '@nestjs/common';
+ import { HealthService } from './health.service';
+ 
+@@ -10,4 +9,4 @@ export class HealthController {
+   getHealth() {
+     return this.healthService.getHealth();
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/apps/api/src/modules/health/health.service.ts b/apps/api/src/modules/health/health.service.ts
+index 5b6be60..be15a70 100644
+--- a/apps/api/src/modules/health/health.service.ts
++++ b/apps/api/src/modules/health/health.service.ts
+@@ -1,13 +1,16 @@
+ import { Injectable } from '@nestjs/common';
++import { AppConfigService } from '../../config/config.service';
+ 
+ @Injectable()
+ export class HealthService {
++  constructor(private readonly configService: AppConfigService) {}
++
+   getHealth() {
+     return {
+       status: 'ok',
+-      service: 'content-os-api',
+-      version: '1.0.0',
++      service: this.configService.appName,
++      version: this.configService.appVersion,
+       timestamp: new Date().toISOString(),
+     };
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/apps/api/src/prisma/prisma.service.ts b/apps/api/src/prisma/prisma.service.ts
+index 712512e..cd2afeb 100644
+--- a/apps/api/src/prisma/prisma.service.ts
++++ b/apps/api/src/prisma/prisma.service.ts
+@@ -1,15 +1,16 @@
+ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+ import { PrismaClient } from '../../generated/prisma/client';
+ import { PrismaPg } from '@prisma/adapter-pg';
++import { AppConfigService } from '../config/config.service';
+ 
+ @Injectable()
+ export class PrismaService
+   extends PrismaClient
+   implements OnModuleInit, OnModuleDestroy
+ {
+-  constructor() {
++  constructor(configService: AppConfigService) {
+     const adapter = new PrismaPg({
+-      connectionString: process.env.DATABASE_URL!,
++      connectionString: configService.databaseUrl,
+     });
+ 
+     super({
+diff --git a/engineering/designs/SPR-003-configuration-module.md b/engineering/designs/SPR-003-configuration-module.md
+new file mode 100644
+index 0000000..b52ec1a
+--- /dev/null
++++ b/engineering/designs/SPR-003-configuration-module.md
+@@ -0,0 +1,74 @@
++# SPR-003 — Configuration Module
++
++## Status
++
++Em implementação
++
++## Contexto
++
++O `apps/api` acessa variáveis de ambiente diretamente via `process.env` em múltiplos
++pontos (`main.ts`, `src/prisma/prisma.service.ts`, `prisma.config.ts`), sem validação
++e sem um ponto único de leitura. O `.env.example` já define as variáveis esperadas
++pela aplicação:
++
++```
++NODE_ENV=development
++PORT=3001
++DATABASE_URL=postgresql://content_os:content_os@localhost:5432/content_os
++APP_NAME=Content OS
++APP_VERSION=0.2.0
++```
++
++A Sprint 002 (ver `PROJECT_STATUS.md`) tem "Configuração Centralizada" como item do
++backlog. Este documento descreve a solução para esse item.
++
++## Decisão
++
++Centralizar toda leitura de variáveis de ambiente do `apps/api` usando `@nestjs/config`
++(pacote oficial do NestJS), com validação de schema via `class-validator` /
++`class-transformer` — abordagem documentada oficialmente pelo NestJS para
++`ConfigModule.forRoot({ validate })`.
++
++### Componentes
++
++- `src/config/configuration.ts` — única função que lê `process.env` diretamente e
++  monta um objeto de configuração tipado e estruturado (`nodeEnv`, `port`, `app.*`,
++  `database.*`).
++- `src/config/env.validation.ts` — classe `EnvironmentVariables` com decorators de
++  `class-validator` + função `validate()`, usada pelo `ConfigModule.forRoot()` para
++  falhar o boot da aplicação caso alguma variável obrigatória esteja ausente ou
++  inválida.
++- `src/config/config.service.ts` — `AppConfigService`, um wrapper tipado sobre o
++  `ConfigService` do `@nestjs/config`, expondo getters (`port`, `databaseUrl`,
++  `appName`, `appVersion`, `nodeEnv`) em vez de chaves de string soltas pela
++  aplicação.
++- `src/config/config.module.ts` — módulo `ConfigModule` (nome do projeto) que
++  encapsula `ConfigModule.forRoot()` do `@nestjs/config` (`isGlobal: true`) e
++  exporta o `AppConfigService`. Segue o mesmo padrão `@Global()` já usado pelo
++  `PrismaModule`, para manter consistência arquitetural.
++
++### Consumidores adaptados
++
++- `main.ts` — porta lida via `AppConfigService.port`.
++- `src/prisma/prisma.service.ts` — connection string lida via
++  `AppConfigService.databaseUrl`.
++- `src/modules/health/health.module.ts` (`health.service.ts`) — passa a expor
++  `appName`/`appVersion` vindos do `AppConfigService` em vez de valor hardcoded.
++
++### Exceção documentada
++
++- `prisma.config.ts` **não** foi adaptado. Esse arquivo é lido pela CLI do Prisma
++  (`prisma migrate`, `prisma studio`, etc.) fora do bootstrap do Nest — não há
++  container de DI disponível nesse contexto, então `ConfigService` não pode ser
++  injetado ali. O acesso a `process.env["DATABASE_URL"]` nesse arquivo é mantido
++  como exceção pontual e documentada, fora do escopo de "aplicação NestJS".
++
++## Consequences
++
++- Toda leitura de env dentro do runtime do NestJS passa a ser centralizada e
++  validada no boot.
++- Novas variáveis de ambiente devem ser adicionadas em `configuration.ts` e
++  `env.validation.ts` antes de serem consumidas em qualquer módulo.
++- Adiciona 3 dependências ao `apps/api`: `@nestjs/config`, `class-validator`,
++  `class-transformer` — todas parte do ecossistema oficial/recomendado pela
++  documentação do NestJS para este caso de uso.
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 2dd884f..020cea9 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -22,22 +22,31 @@ importers:
+     dependencies:
+       '@nestjs/common':
+         specifier: ^11.0.1
+-        version: 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
++        version: 11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      '@nestjs/config':
++        specifier: ^4.0.4
++        version: 4.0.4(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+       '@nestjs/core':
+         specifier: ^11.0.1
+-        version: 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
++        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+       '@nestjs/mapped-types':
+         specifier: '*'
+-        version: 2.1.1(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)
++        version: 2.1.1(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)
+       '@nestjs/platform-express':
+         specifier: ^11.0.1
+-        version: 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
++        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
+       '@prisma/adapter-pg':
+         specifier: ^7.8.0
+         version: 7.8.0
+       '@prisma/client':
+         specifier: ^7.8.0
+         version: 7.8.0(prisma@7.8.0(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.2))(typescript@5.9.2)
++      class-transformer:
++        specifier: ^0.5.1
++        version: 0.5.1
++      class-validator:
++        specifier: ^0.15.1
++        version: 0.15.1
+       pg:
+         specifier: ^8.22.0
+         version: 8.22.0
+@@ -62,7 +71,7 @@ importers:
+         version: 11.1.0(chokidar@4.0.3)(prettier@3.7.4)(typescript@5.9.2)
+       '@nestjs/testing':
+         specifier: ^11.0.1
+-        version: 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@nestjs/platform-express@11.1.28)
++        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@nestjs/platform-express@11.1.28)
+       '@types/express':
+         specifier: ^5.0.0
+         version: 5.0.6
+@@ -973,6 +982,12 @@ packages:
+       class-validator:
+         optional: true
+ 
++  '@nestjs/config@4.0.4':
++    resolution: {integrity: sha512-CJPjNitr0bAufSEnRe2N+JbnVmMmDoo6hvKCPzXgZoGwJSmp/dZPk9f/RMbuD/+Q1ZJPjwsRpq0vxna++Knwow==}
++    peerDependencies:
++      '@nestjs/common': ^10.0.0 || ^11.0.0
++      rxjs: ^7.1.0
++
+   '@nestjs/core@11.1.28':
+     resolution: {integrity: sha512-06m63xIRj8+l8uOeh/8LnYupGubkyu4f+bPKIadaSui6vK9KpXgoz7HveT1yOVLcEt0M0oCOEW5EuEXZkEmBBQ==}
+     engines: {node: '>= 20'}
+@@ -1416,6 +1431,9 @@ packages:
+   '@types/supertest@7.2.0':
+     resolution: {integrity: sha512-uh2Lv57xvggst6lCqNdFAmDSvoMG7M/HDtX4iUCquxQ5EGPtaPM5PL5Hmi7LCvOG8db7YaCPNJEeoI8s/WzIQw==}
+ 
++  '@types/validator@13.15.10':
++    resolution: {integrity: sha512-T8L6i7wCuyoK8A/ZeLYt1+q0ty3Zb9+qbSSvrIVitzT3YjZqkTZ40IbRsPanlB4h1QB3JVL1SYCdR6ngtFYcuA==}
++
+   '@types/yargs-parser@21.0.3':
+     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}
+ 
+@@ -1982,6 +2000,12 @@ packages:
+   cjs-module-lexer@2.2.0:
+     resolution: {integrity: sha512-4bHTS2YuzUvtoLjdy+98ykbNB5jS0+07EvFNXerqZQJ89F7DI6ET7OQo/HJuW6K0aVsKA9hj9/RVb2kQVOrPDQ==}
+ 
++  class-transformer@0.5.1:
++    resolution: {integrity: sha512-SQa1Ws6hUbfC98vKGxZH3KFY0Y1lm5Zm0SY8XX9zbK7FJCyVEac3ATW0RIpwzW+oOfmHE5PMPufDG9hCfoEOMw==}
++
++  class-validator@0.15.1:
++    resolution: {integrity: sha512-LqoS80HBBSCVhz/3KloUly0ovokxpdOLR++Al3J3+dHXWt9sTKlKd4eYtoxhxyUjoe5+UcIM+5k9MIxyBWnRTw==}
++
+   cli-cursor@3.1.0:
+     resolution: {integrity: sha512-I/zHAwsKf9FqGoXM4WWRACob9+SNukZTd94DWF57E4toouRulbCxcUh6RKUEOQlYTHJnzkPMySvPNaaSLNfLZw==}
+     engines: {node: '>=8'}
+@@ -2188,10 +2212,22 @@ packages:
+     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
+     engines: {node: '>=0.10.0'}
+ 
++  dotenv-expand@12.0.3:
++    resolution: {integrity: sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==}
++    engines: {node: '>=12'}
++
+   dotenv@16.0.3:
+     resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
+     engines: {node: '>=12'}
+ 
++  dotenv@16.6.1:
++    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
++    engines: {node: '>=12'}
++
++  dotenv@17.4.1:
++    resolution: {integrity: sha512-k8DaKGP6r1G30Lx8V4+pCsLzKr8vLmV2paqEj1Y55GdAgJuIqpRp5FfajGF8KtwMxCz9qJc6wUIJnm053d/WCw==}
++    engines: {node: '>=12'}
++
+   dotenv@17.4.2:
+     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
+     engines: {node: '>=12'}
+@@ -3090,6 +3126,9 @@ packages:
+     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
+     engines: {node: '>= 0.8.0'}
+ 
++  libphonenumber-js@1.13.8:
++    resolution: {integrity: sha512-80xal1m93rADejw2pMp2MSzFhHCPLEspjHxnH2UtqI+DgAmElsbmLMiqk9niwH9NWAfjsRtaJI+qBrOEmRx9nQ==}
++
+   lines-and-columns@1.2.4:
+     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
+ 
+@@ -4230,6 +4269,10 @@ packages:
+       typescript:
+         optional: true
+ 
++  validator@13.15.35:
++    resolution: {integrity: sha512-TQ5pAGhd5whStmqWvYF4OjQROlmv9SMFVt37qoCBdqRffuuklWYQlCNnEs2ZaIBD1kZRNnikiZOS1eqgkar0iw==}
++    engines: {node: '>= 0.10'}
++
+   vary@1.1.2:
+     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
+     engines: {node: '>= 0.8'}
+@@ -5198,7 +5241,7 @@ snapshots:
+       - uglify-js
+       - webpack-cli
+ 
+-  '@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)':
++  '@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+     dependencies:
+       file-type: 21.3.4
+       iterare: 1.2.1
+@@ -5207,12 +5250,23 @@ snapshots:
+       rxjs: 7.8.2
+       tslib: 2.8.1
+       uid: 2.0.2
++    optionalDependencies:
++      class-transformer: 0.5.1
++      class-validator: 0.15.1
+     transitivePeerDependencies:
+       - supports-color
+ 
+-  '@nestjs/core@11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
++  '@nestjs/config@4.0.4(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)':
+     dependencies:
+-      '@nestjs/common': 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      dotenv: 17.4.1
++      dotenv-expand: 12.0.3
++      lodash: 4.18.1
++      rxjs: 7.8.2
++
++  '@nestjs/core@11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
++    dependencies:
++      '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+       fast-safe-stringify: 2.1.1
+       iterare: 1.2.1
+       path-to-regexp: 8.4.2
+@@ -5221,17 +5275,20 @@ snapshots:
+       tslib: 2.8.1
+       uid: 2.0.2
+     optionalDependencies:
+-      '@nestjs/platform-express': 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
++      '@nestjs/platform-express': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
+ 
+-  '@nestjs/mapped-types@2.1.1(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)':
++  '@nestjs/mapped-types@2.1.1(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)':
+     dependencies:
+-      '@nestjs/common': 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+       reflect-metadata: 0.2.2
++    optionalDependencies:
++      class-transformer: 0.5.1
++      class-validator: 0.15.1
+ 
+-  '@nestjs/platform-express@11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)':
++  '@nestjs/platform-express@11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)':
+     dependencies:
+-      '@nestjs/common': 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
+-      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+       cors: 2.8.6
+       express: 5.2.1
+       multer: 2.2.0
+@@ -5266,13 +5323,13 @@ snapshots:
+     transitivePeerDependencies:
+       - chokidar
+ 
+-  '@nestjs/testing@11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@nestjs/platform-express@11.1.28)':
++  '@nestjs/testing@11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@nestjs/platform-express@11.1.28)':
+     dependencies:
+-      '@nestjs/common': 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
+-      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+       tslib: 2.8.1
+     optionalDependencies:
+-      '@nestjs/platform-express': 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
++      '@nestjs/platform-express': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
+ 
+   '@next/env@16.2.0': {}
+ 
+@@ -5665,6 +5722,8 @@ snapshots:
+       '@types/methods': 1.1.4
+       '@types/superagent': 8.1.10
+ 
++  '@types/validator@13.15.10': {}
++
+   '@types/yargs-parser@21.0.3': {}
+ 
+   '@types/yargs@17.0.35':
+@@ -6278,6 +6337,14 @@ snapshots:
+ 
+   cjs-module-lexer@2.2.0: {}
+ 
++  class-transformer@0.5.1: {}
++
++  class-validator@0.15.1:
++    dependencies:
++      '@types/validator': 13.15.10
++      libphonenumber-js: 1.13.8
++      validator: 13.15.35
++
+   cli-cursor@3.1.0:
+     dependencies:
+       restore-cursor: 3.1.0
+@@ -6448,8 +6515,16 @@ snapshots:
+     dependencies:
+       esutils: 2.0.3
+ 
++  dotenv-expand@12.0.3:
++    dependencies:
++      dotenv: 16.6.1
++
+   dotenv@16.0.3: {}
+ 
++  dotenv@16.6.1: {}
++
++  dotenv@17.4.1: {}
++
+   dotenv@17.4.2: {}
+ 
+   dunder-proto@1.0.1:
+@@ -7666,6 +7741,8 @@ snapshots:
+       prelude-ls: 1.2.1
+       type-check: 0.4.0
+ 
++  libphonenumber-js@1.13.8: {}
++
+   lines-and-columns@1.2.4: {}
+ 
+   load-esm@1.0.3: {}
+@@ -8849,6 +8926,8 @@ snapshots:
+     optionalDependencies:
+       typescript: 5.9.2
+ 
++  validator@13.15.35: {}
++
+   vary@1.1.2: {}
+ 
+   walker@1.0.8:

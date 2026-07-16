@@ -1,12 +1,14 @@
-import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { AppConfigService } from './config/config.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3001);
+  const configService = app.get(AppConfigService);
 
-  console.log('🚀 API running on http://localhost:3001');
+  await app.listen(configService.port);
+
+  console.log(`🚀 API running on http://localhost:${configService.port}`);
 }
 
 bootstrap();
