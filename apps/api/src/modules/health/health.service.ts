@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { AppConfigService } from '../../config/config.service';
 
 @Injectable()
 export class HealthService {
+  constructor(private readonly configService: AppConfigService) {}
+
   getHealth() {
     return {
       status: 'ok',
-      service: 'content-os-api',
-      version: '1.0.0',
+      service: this.configService.appName,
+      version: this.configService.appVersion,
       timestamp: new Date().toISOString(),
     };
   }
