@@ -1,105 +1,402 @@
-# Arquitetura do Content-OS
+# Architecture
 
-## Objetivo
+# Content-OS
 
-O Content-OS é uma plataforma modular para gestão empresarial, construída com foco em escalabilidade, manutenibilidade e segurança.
+Versão: 1.0
 
-A arquitetura prioriza baixo acoplamento, alta coesão e evolução incremental.
+Status: Ativo
+
+Última atualização: Julho/2026
 
 ---
 
-# Stack Tecnológica
+# Objetivo
 
-## Frontend
+Este documento descreve a arquitetura conceitual do Content-OS.
 
-- Next.js
-- React
-- TypeScript
+Seu objetivo é servir como referência para decisões arquiteturais e garantir que a evolução do sistema mantenha uma estrutura consistente ao longo do tempo.
 
-## Backend
-
-- NestJS 11
-- TypeScript
-- Prisma 7
-
-## Banco de Dados
-
-- PostgreSQL 16
-
-## Infraestrutura
-
-- Docker
-- Turborepo
-- pnpm Workspace
+Este documento **não descreve detalhes de implementação**, mas sim a organização do produto em domínios de negócio e a relação entre eles.
 
 ---
 
 # Princípios Arquiteturais
 
-O projeto adota os seguintes princípios:
+Toda decisão técnica deverá respeitar os seguintes princípios:
 
-- SOLID
-- Clean Code
-- Modularização por domínio
-- Dependency Injection
-- Evolução incremental da Clean Architecture
-- Convention over Configuration
+- Alta coesão.
+- Baixo acoplamento.
+- Simplicidade.
+- Escalabilidade.
+- Reutilização.
+- Modularização.
+- Evolução incremental.
 
----
-
-# Estrutura do Repositório
-
-```
-apps/
-    api/
-    web/
-
-packages/
-
-docker/
-
-engineering/
-```
+Sempre que possível, novos recursos deverão ser adicionados como novos módulos, evitando alterações em módulos existentes.
 
 ---
 
-# Organização da API
+# Visão Geral
 
-A API é organizada em módulos do NestJS.
+O Content-OS é dividido em domínios independentes.
 
-Cada módulo deve possuir responsabilidade única.
+Cada domínio representa uma responsabilidade de negócio claramente definida.
+
+```
+                           +----------------------+
+                           |      Frontend        |
+                           |      Next.js         |
+                           +----------+-----------+
+                                      |
+                                      |
+                               REST / HTTPS
+                                      |
+                          +-----------v-----------+
+                          |       NestJS API      |
+                          +-----------+-----------+
+                                      |
+                     +----------------+----------------+
+                     |                                 |
+              Application Layer                 Infrastructure
+                     |                                 |
+             Business Domains                  Prisma / PostgreSQL
+```
+
+---
+
+# Arquitetura em Camadas
+
+```
+Presentation
+
+↓
+
+Application
+
+↓
+
+Domain
+
+↓
+
+Infrastructure
+
+↓
+
+Database
+```
+
+Cada camada possui responsabilidades específicas.
+
+---
+
+# Domínios do Produto
+
+O sistema será organizado pelos seguintes domínios.
+
+```
+Content-OS
+
+├── Workspace
+├── Authentication
+├── Brand Hub
+├── Content Hub
+├── AI Studio
+├── Editorial
+├── Media Library
+├── Analytics
+├── Integrations
+└── Administration
+```
+
+Cada domínio deverá possuir baixo acoplamento com os demais.
+
+---
+
+# Workspace
+
+Responsável pela organização da plataforma.
+
+Responsabilidades:
+
+- Empresas
+- Usuários
+- Equipes
+- Permissões
+- Workspaces
+
+No futuro deverá suportar multiempresa (multi-tenant).
+
+---
+
+# Authentication
+
+Responsável pela autenticação e autorização.
+
+Responsabilidades:
+
+- Login
+- JWT
+- Refresh Token
+- Recuperação de senha
+- Controle de acesso
+- Perfis de usuário
+
+---
+
+# Brand Hub
+
+Centraliza todas as informações da marca.
+
+Responsabilidades:
+
+- Nome da marca
+- Logo
+- Paleta de cores
+- Tipografia
+- Público-alvo
+- Tom de voz
+- Personas
+- Objetivos da marca
+
+A IA utilizará essas informações para personalizar as respostas.
+
+---
+
+# Content Hub
+
+É o coração do sistema.
+
+Responsável por organizar todo o conhecimento produzido.
+
+Responsabilidades:
+
+- Banco de ideias
+- Biblioteca de conteúdo
+- Campanhas
+- Categorias
+- Tags
+- Templates
+- Histórico
+
+Nenhum conteúdo deverá ser descartado.
+
+Todo conteúdo poderá ser reutilizado.
+
+---
+
+# AI Studio
+
+Responsável pelos recursos de Inteligência Artificial.
+
+Não gera apenas textos.
+
+Participa de todo o fluxo criativo.
+
+Funcionalidades previstas:
+
+- Sugestão de ideias
+- Geração de legendas
+- Geração de hashtags
+- CTA
+- Emojis
+- Calendário
+- Melhorias automáticas
+- Resumos
+- Adaptação para outras redes sociais
+
+O AI Studio nunca deverá substituir a organização do sistema.
+
+Ele complementa os demais módulos.
+
+---
+
+# Editorial
+
+Responsável pelo planejamento.
+
+Funcionalidades:
+
+- Calendário Editorial
+- Agendamentos
+- Fluxo de aprovação
+- Publicações
+- Status
+- Planejamento semanal
+- Planejamento mensal
+
+---
+
+# Media Library
+
+Responsável pelos arquivos.
+
+Exemplos:
+
+- Fotos
+- Vídeos
+- Logos
+- Ícones
+- Artes
+- Arquivos de campanha
+
+Todos os conteúdos poderão referenciar arquivos da biblioteca.
+
+---
+
+# Analytics
+
+Responsável pela análise dos resultados.
+
+Métricas previstas:
+
+- Engajamento
+- Frequência
+- Crescimento
+- Conteúdos mais utilizados
+- Conteúdos reutilizados
+- Performance das campanhas
+
+---
+
+# Integrations
+
+Centraliza integrações externas.
+
+Exemplos futuros:
+
+- Instagram
+- Facebook
+- Threads
+- Pinterest
+- TikTok
+- LinkedIn
+- Google Drive
+- Dropbox
+- OpenAI
+- Anthropic
+- Gemini
+
+Nenhuma integração deverá impactar diretamente os domínios internos.
+
+Sempre utilizar interfaces bem definidas.
+
+---
+
+# Administration
+
+Responsável pelas configurações da plataforma.
+
+Exemplos:
+
+- Configurações gerais
+- Auditoria
+- Logs
+- Configurações da IA
+- Feature Flags
+- Configurações de integração
+
+---
+
+# Relação entre os Domínios
+
+```
+Workspace
+      │
+      ├──────────────┐
+      │              │
+      ▼              ▼
+
+Brand Hub      Authentication
+
+      │
+      ▼
+
+Content Hub
+
+      │
+      ├─────────────┐
+      │             │
+      ▼             ▼
+
+AI Studio     Media Library
+
+      │             │
+      └──────┬──────┘
+             ▼
+
+        Editorial
+
+             │
+
+             ▼
+
+        Analytics
+
+             │
+
+             ▼
+
+        Integrations
+```
+
+O **Content Hub** é o principal domínio do produto.
+
+A maioria das funcionalidades gira em torno dele.
+
+---
+
+# Arquitetura da API
+
+A API seguirá arquitetura modular do NestJS.
+
+Cada domínio possuirá seu próprio módulo.
 
 Exemplo:
 
 ```
 modules/
 
-    auth/
+workspace/
 
-    users/
+authentication/
 
-    companies/
+brand/
 
-    products/
+content/
 
-    guarantees/
+ai/
+
+editorial/
+
+analytics/
+
+media/
+
+integrations/
+
+administration/
 ```
 
----
+Cada módulo deverá possuir:
 
-# Persistência
+```
+module.ts
 
-Toda persistência deverá utilizar Prisma.
+controller.ts
 
-Não será utilizado SQL diretamente na camada de negócio.
+service.ts
 
----
+repository.ts
 
-# Configuração
+dto/
 
-Toda configuração deverá passar pelo ConfigModule.
+entities/
 
-Nenhum módulo poderá acessar process.env diretamente.
+interfaces/
+
+tests/
+```
 
 ---
 
@@ -107,44 +404,147 @@ Nenhum módulo poderá acessar process.env diretamente.
 
 Banco oficial:
 
+```
 PostgreSQL
+```
 
-ORM oficial:
+Acesso aos dados:
 
-Prisma
+```
+NestJS
 
----
+↓
 
-# Logs
+Prisma ORM
 
-Toda exceção deverá ser tratada.
+↓
 
-Não utilizar console.log para logs de produção.
+PostgreSQL
+```
 
----
-
-# Testes
-
-Cada módulo deverá possuir testes unitários.
-
-Testes de integração serão adicionados gradualmente.
+Nenhum módulo deverá acessar SQL diretamente, salvo exceções justificadas por uma ADR.
 
 ---
 
-# Documentação
+# Comunicação
 
-Toda decisão arquitetural relevante deverá gerar um ADR.
+Inicialmente:
 
-Toda Sprint deverá possuir documentação técnica.
+```
+REST API
+```
+
+No futuro poderão ser adicionados:
+
+- Webhooks
+- Filas
+- Eventos
+- WebSocket
+
+Sem alterar a arquitetura principal.
 
 ---
 
-# Dependências
+# Inteligência Artificial
 
-Nenhuma biblioteca poderá ser adicionada sem justificativa técnica documentada.
+A IA será tratada como um serviço externo.
+
+```
+Application
+
+↓
+
+AI Provider Interface
+
+↓
+
+OpenAI
+
+Anthropic
+
+Gemini
+
+Outros
+```
+
+O restante do sistema nunca deverá depender de um fornecedor específico.
+
+A troca do modelo deverá ocorrer apenas na camada de infraestrutura.
 
 ---
 
-# Objetivo de Longo Prazo
+# Estratégia de Crescimento
 
-O projeto deverá evoluir para uma arquitetura baseada em domínio (DDD) e Clean Architecture, mantendo simplicidade nas fases iniciais.
+A arquitetura deverá permitir evolução incremental.
+
+Ordem prevista:
+
+Fase 1
+
+- Workspace
+- Authentication
+- Content Hub
+
+Fase 2
+
+- Brand Hub
+- Media Library
+
+Fase 3
+
+- AI Studio
+
+Fase 4
+
+- Editorial
+
+Fase 5
+
+- Analytics
+
+Fase 6
+
+- Integrações
+
+Cada fase deverá entregar valor real ao usuário.
+
+---
+
+# Decisões Arquiteturais
+
+Todas as decisões relevantes deverão ser registradas em:
+
+```
+engineering/adr/
+```
+
+Nenhuma decisão estrutural deverá existir apenas no código.
+
+---
+
+# Princípios de Desenvolvimento
+
+Antes de implementar uma funcionalidade, responder:
+
+- Em qual domínio ela pertence?
+- Ela aumenta ou reduz acoplamento?
+- Existe reutilização possível?
+- Está respeitando responsabilidade única?
+- O domínio continua simples?
+
+Se houver dúvida, criar uma ADR antes da implementação.
+
+---
+
+# Visão de Longo Prazo
+
+O Content-OS deverá evoluir para uma plataforma composta por módulos independentes, permitindo que novas funcionalidades sejam adicionadas sem comprometer a estabilidade do sistema.
+
+A arquitetura deve favorecer manutenção, escalabilidade e evolução contínua, mantendo o foco principal do produto: **organizar todo o ciclo de vida do conteúdo com apoio de Inteligência Artificial**.
+
+---
+
+# Arquitetura em Uma Frase
+
+> **O Content-OS é um sistema modular onde cada domínio possui uma responsabilidade clara, trabalhando em conjunto para transformar ideias em conteúdo organizado, reutilizável e inteligente.**
+
