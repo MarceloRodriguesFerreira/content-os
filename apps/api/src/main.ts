@@ -1,17 +1,19 @@
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { AppConfig } from './config/configuration';
+import { AppConfigService } from './config/app-config.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService<AppConfig, true>);
+  const logger = new Logger('Bootstrap');
 
-  const port = configService.get('port', { infer: true });
+  const app = await NestFactory.create(AppModule);
+  const appConfigService = app.get(AppConfigService);
+
+  const port = appConfigService.port;
 
   await app.listen(port);
 
-  console.log(`🚀 API running on http://localhost:${port}`);
+  logger.log(`🚀 API running on http://localhost:${port}`);
 }
 
 void bootstrap();

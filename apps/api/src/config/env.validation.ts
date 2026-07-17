@@ -41,8 +41,13 @@ class EnvironmentVariables {
 
 /**
  * Função de validação usada pelo ConfigModule (@nestjs/config).
- * Garante que a aplicação falhe rápido (fail-fast) no bootstrap caso
- * variáveis obrigatórias estejam ausentes ou com tipo/formato inválido.
+ *
+ * Roda uma única vez, no bootstrap, antes de qualquer módulo da aplicação
+ * ser instanciado. Isso é intencional: preferimos que a aplicação nem
+ * suba (fail-fast) a subir com uma variável obrigatória ausente ou
+ * malformada e só descobrir isso mais tarde, em runtime, quando algo
+ * tentar usar esse valor (ex.: uma conexão de banco falhando silenciosamente
+ * horas depois do deploy).
  */
 export function validate(config: Record<string, unknown>) {
   const validatedConfig = plainToInstance(EnvironmentVariables, config, {
