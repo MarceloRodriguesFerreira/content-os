@@ -78,7 +78,7 @@ Preparar toda a infraestrutura de persistência de dados.
 - [ ] Prisma
 - [ ] Primeira Migration
 - [ ] Swagger
-- [ ] Configuração Centralizada
+- [x] Configuração Centralizada
 
 ---
 
