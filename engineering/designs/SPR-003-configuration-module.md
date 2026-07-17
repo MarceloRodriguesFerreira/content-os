@@ -24,7 +24,7 @@ Evitar acesso direto ao process.env em qualquer componente da aplicação.
 
 ## Fora do escopo
 
-- JWT
-- Redis
-- RabbitMQ
-- Cache
+    - JWT
+    - Redis
+    - RabbitMQ
+    - Cache
