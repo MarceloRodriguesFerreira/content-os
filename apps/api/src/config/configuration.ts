@@ -14,21 +14,14 @@ export interface ApplicationConfig {
 }
 
 /**
- * Hoje só `url` é efetivamente usada (pelo PrismaPg adapter). Os demais
- * campos ficam reservados e não são lidos por nenhum consumidor ainda:
- * existem para permitir, no futuro, montar a connection string a partir de
- * parâmetros individuais (útil para providers gerenciados que não expõem
- * uma URL única, ou para exigir SSL de forma explícita) sem precisar
- * redesenhar a interface ou os pontos que consomem ConfigService.
+ * Configuração de conexão com o banco de dados. Hoje contém apenas os
+ * campos efetivamente consumidos pela aplicação (o adapter PrismaPg usa
+ * uma connection string única). Novos campos (ex.: host/port/user/senha
+ * individuais, SSL) devem ser adicionados aqui somente quando alguma
+ * funcionalidade real passar a precisar deles — não antes.
  */
 export interface DatabaseConfig {
   url: string;
-  host?: string;
-  port?: number;
-  user?: string;
-  password?: string;
-  database?: string;
-  ssl?: boolean;
 }
 
 /**
@@ -59,15 +52,5 @@ export default (): AppConfig => ({
   },
   database: {
     url: process.env.DATABASE_URL ?? '',
-    host: process.env.DATABASE_HOST,
-    port: process.env.DATABASE_PORT
-      ? parseInt(process.env.DATABASE_PORT, 10)
-      : undefined,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE_NAME,
-    ssl: process.env.DATABASE_SSL
-      ? process.env.DATABASE_SSL === 'true'
-      : undefined,
   },
 });
