@@ -1,9 +1,17 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AppConfigService } from './app-config.service';
 import configuration from './configuration';
 import { validate } from './env.validation';
+
+const envFilePaths = [
+  join(process.cwd(), '.env'),
+  join(process.cwd(), '../../.env'),
+].filter(existsSync);
 
 /**
  * Módulo global de configuração. Encapsula o ConfigModule.forRoot do
@@ -20,6 +28,7 @@ import { validate } from './env.validation';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: envFilePaths,
       load: [configuration],
       validate,
     }),

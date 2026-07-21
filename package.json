@@ -7,9 +7,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-
     "api": "pnpm --filter api",
-
     "db:generate": "pnpm --filter api prisma generate",
     "db:pull": "pnpm --filter api prisma db pull",
     "db:push": "pnpm --filter api prisma db push",
@@ -18,7 +16,7 @@
   },
   "devDependencies": {
     "prettier": "^3.7.4",
-    "turbo": "^2.10.4",
+    "turbo": "^2.10.5",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@11.11.0",

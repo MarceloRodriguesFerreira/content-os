@@ -28,3 +28,16 @@ Evitar acesso direto ao process.env em qualquer componente da aplicação.
     - Redis
     - RabbitMQ
     - Cache
+
+## Lições Aprendidas
+
+Durante a validação foi identificada uma incompatibilidade entre Jest 30 e ts-jest 29.
+
+Para este projeto foi padronizado:
+
+- jest 29.7.x
+- ts-jest 29.4.x
+- @types/jest 29.5.x
+
+Essa combinação é compatível com o NestJS 11 e evita problemas na resolução do transformer `ts-jest`.
+
