@@ -32,3 +32,22 @@ Todas as mudanças relevantes deste projeto serão registradas aqui.
 - NestJS
 - Health Module
 - Engenharia Base
+
+## [0.2.0] - 2026-07-21
+
+### Added
+
+- Configuração centralizada da aplicação
+- AppConfigModule
+- AppConfigService
+- Validação de variáveis de ambiente
+- Integração do Prisma com AppConfigService
+
+### Changed
+
+- Removido uso direto de process.env
+- Bootstrap da aplicação centralizado
+
+### Fixed
+
+- Validação de ambiente executada durante o startup

@@ -186,3 +186,12 @@ Learn more about the power of Turborepo:
 - [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
 - [Configuration Options](https://turborepo.dev/docs/reference/configuration)
 - [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+
+# Documentação
+
+| Documento | Descrição |
+|-----------|-----------|
+| VISION.md | Visão do Produto |
+| PROJECT_STATUS.md | Situação atual |
+| ARCHITECTURE.md | Arquitetura oficial |
+| engineering/ | ADRs, Standards, Runbooks e Designs |
