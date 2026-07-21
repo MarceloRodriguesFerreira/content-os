@@ -16,7 +16,7 @@
 
 **Sprint Atual**
 
-Sprint 002 — Infraestrutura de Dados
+Sprint 004 — Fundação de Persistência
 
 ---
 
@@ -62,6 +62,11 @@ Sprint 002 — Infraestrutura de Dados
 - [x] Frontend Next.js
 - [x] Backend NestJS
 - [x] Módulo Health
+- [x] Docker Compose
+- [x] PostgreSQL
+- [x] Prisma (client + migrations)
+- [x] Configuração Centralizada (AppConfigModule/AppConfigService)
+- [x] Fundação de Persistência (lifecycle, graceful shutdown, testes)
 
 ---
 
@@ -69,16 +74,21 @@ Sprint 002 — Infraestrutura de Dados
 
 ## Objetivo
 
-Preparar toda a infraestrutura de persistência de dados.
+Consolidar a camada de persistência (PrismaModule/PrismaService): lifecycle,
+graceful shutdown, logging, tratamento de erro e testabilidade.
 
 ## Backlog
 
-- [ ] Docker Compose
-- [ ] PostgreSQL
-- [ ] Prisma
-- [ ] Primeira Migration
+- [x] Docker Compose
+- [x] PostgreSQL
+- [x] Prisma
+- [x] Primeira Migration
 - [ ] Swagger
 - [x] Configuração Centralizada
+- [x] Graceful Shutdown do Prisma
+- [x] Logging de lifecycle do Prisma
+- [x] Testes unitários do PrismaService
+- [x] Correção da suíte de testes (Jest + Prisma 7 / ESM)
 
 ---
 
@@ -122,25 +132,21 @@ engineering/
 
 # Último Marco
 
-✅ Fundação do projeto concluída.
+✅ Fundação de persistência consolidada (SPR-004).
 
-- Turborepo
-- Next.js
-- NestJS
-- Health Module
+- PrismaModule / PrismaService com lifecycle robusto
+- Graceful shutdown
+- Logging e tratamento de erro de conexão
+- Suíte de testes (unitária e e2e) corrigida para Prisma 7
 
 ---
 
 # Próximo Marco
 
-Infraestrutura de Dados
-
-- PostgreSQL
-- Prisma
-- Docker
+A definir pelo Arquiteto de Software / Tech Lead (Release 0.2 — Segurança).
 
 ---
 
 Última atualização:
 
-10/07/2026
+21/07/2026

@@ -26,12 +26,20 @@ O desenvolvimento do Content-OS será incremental, priorizando a construção de
 - Prisma Module
 - Prisma Service
 
-## SPR-003 🔄
+## SPR-003 ✅
 
 - Configuration Module
 - ConfigService
 - Validação de ambiente
 - Configuração centralizada
+- AppConfigModule / AppConfigService (fachada tipada sobre o ConfigService)
+
+## SPR-004 ✅
+
+- Hardening do PrismaModule/PrismaService (lifecycle, logging, erros)
+- Graceful shutdown (`enableShutdownHooks`)
+- Testes unitários do PrismaService
+- Correção da suíte de testes (Jest + Prisma 7 / ESM)
 
 ---
 

@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { PrismaClient } from '../../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { AppConfigService } from '../config/app-config.service';
@@ -18,6 +23,8 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  private readonly logger = new Logger(PrismaService.name);
+
   constructor(appConfigService: AppConfigService) {
     const adapter = new PrismaPg({
       connectionString: appConfigService.databaseUrl,
@@ -29,10 +36,35 @@ export class PrismaService
   }
 
   async onModuleInit() {
-    await this.$connect();
+    try {
+      await this.$connect();
+      this.logger.log('Conexão com o banco de dados estabelecida.');
+    } catch (error) {
+      // Falha ao conectar é tratada como impedimento para a aplicação
+      // subir (fail-fast, mesmo princípio adotado para configuração
+      // inválida na SPR-003): melhor a API nem responder requisições do
+      // que subir "no ar" sem conseguir falar com o banco. Relançamos o
+      // erro para que o Nest aborte o bootstrap.
+      this.logger.error(
+        'Falha ao conectar ao banco de dados.',
+        error instanceof Error ? error.stack : error,
+      );
+      throw error;
+    }
   }
 
   async onModuleDestroy() {
-    await this.$disconnect();
+    try {
+      await this.$disconnect();
+      this.logger.log('Conexão com o banco de dados encerrada.');
+    } catch (error) {
+      // Diferente do onModuleInit, aqui a aplicação já está em processo
+      // de shutdown: registramos o erro para investigação, mas não faz
+      // sentido impedir o encerramento por causa disso.
+      this.logger.error(
+        'Falha ao encerrar a conexão com o banco de dados.',
+        error instanceof Error ? error.stack : error,
+      );
+    }
   }
 }
