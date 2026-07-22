@@ -136,7 +136,11 @@ Planejado
 
 # Arquitetura
 
-Documentação disponível em:
+A arquitetura oficial encontra-se em:
+
+ARCHITECTURE.md
+
+Decisões arquiteturais detalhadas:
 
 engineering/
 
