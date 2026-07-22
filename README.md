@@ -17,7 +17,7 @@
 apps/
 packages/
 engineering/
-docs/
+docs/                  Documentação complementar (diagramas, fluxos e material visual)
 
 ## Como executar
 
