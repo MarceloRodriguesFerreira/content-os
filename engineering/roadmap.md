@@ -57,29 +57,9 @@ O desenvolvimento do Content-OS será incremental, priorizando a construção de
 
 ---
 
-# Release 0.3
+# Releases seguintes
 
-## Plataforma
+O roadmap de produto a partir daqui (funcionalidades de negócio e releases futuras) é mantido em:
 
-- Empresas
-- Filiais
-- Auditoria
-- Logs
-- Estrutura Organizacional
-
----
-
-# Release 0.4
-
-## Módulos de Negócio
-
-- Clientes
-- Produtos
-- Garantias
-- Devoluções
-
----
-
-# Release 1.0
-
-Primeira versão operacional do Content-OS.
+- `PROJECT_STATUS.md`
+- `VISION.md`

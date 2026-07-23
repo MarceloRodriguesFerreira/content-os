@@ -8,7 +8,7 @@ Content-OS
 
 ## Visão
 
-Sistema ERP moderno voltado para empresas do segmento atacadista.
+Plataforma inteligente para criação, organização e publicação de conteúdo para redes sociais, utilizando Inteligência Artificial.
 
 ---
 
@@ -26,7 +26,7 @@ Sistema ERP moderno voltado para empresas do segmento atacadista.
 
 ## Público
 
-Empresas distribuidoras.
+Pequenos negócios, prestadores de serviço, agências de marketing, social media e criadores de conteúdo.
 
 ---
 

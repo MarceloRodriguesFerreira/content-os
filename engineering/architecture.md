@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-O Content-OS é uma plataforma modular para gestão empresarial, construída com foco em escalabilidade, manutenibilidade e segurança.
+O Content-OS é uma plataforma modular para criação, organização e publicação de conteúdo para redes sociais utilizando Inteligência Artificial, construída com foco em escalabilidade, manutenibilidade e segurança.
 
 A arquitetura prioriza baixo acoplamento, alta coesão e evolução incremental.
 
@@ -49,17 +49,12 @@ O projeto adota os seguintes princípios:
 
 # Estrutura do Repositório
 
-```
-apps/
-    api/
-    web/
-
+pps/
+api/
+web/
 packages/
-
 docker/
-
 engineering/
-```
 
 ---
 
@@ -71,19 +66,12 @@ Cada módulo deve possuir responsabilidade única.
 
 Exemplo:
 
-```
 modules/
-
-    auth/
-
-    users/
-
-    companies/
-
-    products/
-
-    guarantees/
-```
+auth/
+users/
+projects/
+content/
+templates/
 
 ---
 
