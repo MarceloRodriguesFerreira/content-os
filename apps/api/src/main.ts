@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
+import { setupSwagger, SWAGGER_PATH } from './swagger.config';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -15,6 +16,8 @@ async function bootstrap() {
   // abrupta em vez de ser fechada de forma limpa.
   app.enableShutdownHooks();
 
+  setupSwagger(app);
+
   const appConfigService = app.get(AppConfigService);
 
   const port = appConfigService.port;
@@ -22,6 +25,7 @@ async function bootstrap() {
   await app.listen(port);
 
   logger.log(`🚀 API running on http://localhost:${port}`);
+  logger.log(`📚 Swagger docs at http://localhost:${port}/${SWAGGER_PATH}`);
 }
 
 void bootstrap();

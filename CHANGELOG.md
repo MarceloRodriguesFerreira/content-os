@@ -15,6 +15,11 @@
 - ENGINEERING_GUIDE.md
 - Templates de Engenharia
 - Guias de utilização para IA (Claude, ChatGPT e Copilot)
+- `@nestjs/swagger` configurado via `DocumentBuilder`/`SwaggerModule` (SPR-005)
+- Documentação interativa da API em `/api/docs` (SPR-005)
+- Especificação OpenAPI 3 crua em `/api/docs-json` (SPR-005)
+- `HealthResponseDto` documentado com `@ApiProperty` (descrições e exemplos) (SPR-005)
+- Organização da documentação por tags (`App`, `Health`) (SPR-005)
 
 ### Changed
 
@@ -23,6 +28,9 @@
 - Reorganização da documentação oficial
 - Consolidação da documentação de produto na raiz do repositório
 - Remoção de documentação duplicada em engineering/
+- `HealthController`/`HealthService` com tipagem de retorno explícita
+  (`HealthResponseDto`) (SPR-005)
+- `AppController` com tag e operação documentadas no Swagger (SPR-005)
 
 ### Fixed
 
@@ -30,3 +38,6 @@
 - Compatibilidade Jest 29 + ts-jest
 - Carregamento do .env em diferentes diretórios do monorepo
 - Encerramento correto das conexões Prisma
+- Placeholder inválido de `allowBuilds` em `pnpm-workspace.yaml`
+  (`@scarf/scarf`), que quebrava `pnpm install`/`pnpm lint` após a
+  instalação do `@nestjs/swagger` (SPR-005)
