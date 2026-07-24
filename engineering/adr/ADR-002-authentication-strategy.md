@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposta — aguardando aceite do Arquiteto do Content-OS. Não implementar antes do aceite formal.
+Accepted 
 
 ## Context
 
