@@ -1,0 +1,613 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 8172a48..f201b04 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -15,6 +15,11 @@
+ - ENGINEERING_GUIDE.md
+ - Templates de Engenharia
+ - Guias de utilização para IA (Claude, ChatGPT e Copilot)
++- `@nestjs/swagger` configurado via `DocumentBuilder`/`SwaggerModule` (SPR-005)
++- Documentação interativa da API em `/api/docs` (SPR-005)
++- Especificação OpenAPI 3 crua em `/api/docs-json` (SPR-005)
++- `HealthResponseDto` documentado com `@ApiProperty` (descrições e exemplos) (SPR-005)
++- Organização da documentação por tags (`App`, `Health`) (SPR-005)
+ 
+ ### Changed
+ 
+@@ -23,6 +28,9 @@
+ - Reorganização da documentação oficial
+ - Consolidação da documentação de produto na raiz do repositório
+ - Remoção de documentação duplicada em engineering/
++- `HealthController`/`HealthService` com tipagem de retorno explícita
++  (`HealthResponseDto`) (SPR-005)
++- `AppController` com tag e operação documentadas no Swagger (SPR-005)
+ 
+ ### Fixed
+ 
+@@ -30,3 +38,6 @@
+ - Compatibilidade Jest 29 + ts-jest
+ - Carregamento do .env em diferentes diretórios do monorepo
+ - Encerramento correto das conexões Prisma
++- Placeholder inválido de `allowBuilds` em `pnpm-workspace.yaml`
++  (`@scarf/scarf`), que quebrava `pnpm install`/`pnpm lint` após a
++  instalação do `@nestjs/swagger` (SPR-005)
+diff --git a/PROJECT_STATUS.md b/PROJECT_STATUS.md
+index ec37ee2..1a07293 100644
+--- a/PROJECT_STATUS.md
++++ b/PROJECT_STATUS.md
+@@ -31,7 +31,10 @@
+ 
+ ## Sprint Atual
+ 
+-**SPR-005 — Documentação da API (Swagger/OpenAPI)**
++**SPR-006 — Segurança (JWT)**
++
++SPR-005 (Documentação da API) foi oficialmente encerrada como Marco Técnico
++da Release 0.2 — ver "Último Marco".
+ 
+ Última atualização:
+ 
+@@ -82,7 +85,7 @@
+ | Configuração Centralizada | ✅ Operacional |
+ | Testes Unitários | ✅ Operacional |
+ | Testes E2E | ✅ Operacional |
+-| Swagger/OpenAPI | ⬜ Planejado |
++| Swagger/OpenAPI | ✅ Operacional |
+ | Autenticação | ⬜ Planejado |
+ | CI/CD | ⬜ Planejado |
+ | Deploy | ⬜ Planejado |
+@@ -107,9 +110,18 @@
+ - ✅ Testes Unitários
+ - ✅ Testes E2E
+ 
++## Documentação da API (SPR-005)
++
++- ✅ `@nestjs/swagger` configurado (`DocumentBuilder` + `SwaggerModule`)
++- ✅ OpenAPI 3 disponível em `/api/docs-json`
++- ✅ UI interativa em `/api/docs`
++- ✅ Versionamento inicial (1.0)
++- ✅ Organização por tags (`App`, `Health`)
++- ✅ Módulo Health documentado por completo (`@ApiOperation`, `@ApiResponse`, DTO com `@ApiProperty`)
++
+ ---
+ 
+-# Sprint Atual
++# SPR-005 — Backlog (concluído)
+ 
+ ## Objetivo
+ 
+@@ -117,13 +129,13 @@ Implementar a documentação completa da API utilizando Swagger/OpenAPI, estabel
+ 
+ ## Backlog
+ 
+-- [ ] Configuração do Swagger
+-- [ ] OpenAPI
+-- [ ] Versionamento da API
+-- [ ] Documentação automática dos endpoints
+-- [ ] DTOs documentados
+-- [ ] Padronização das respostas
+-- [ ] Ambiente `/api/docs`
++- [x] Configuração do Swagger
++- [x] OpenAPI
++- [x] Versionamento da API
++- [x] Documentação automática dos endpoints
++- [x] DTOs documentados
++- [x] Padronização das respostas
++- [x] Ambiente `/api/docs`
+ 
+ ---
+ 
+@@ -140,6 +152,15 @@ Planejado
+ 
+ # Último Marco
+ 
++## ✅ Marco Técnico — SPR-005 concluída (Documentação da API)
++
++### Principais entregas
++
++- Swagger/OpenAPI configurado (`/api/docs`, `/api/docs-json`)
++- Módulo Health documentado por completo (referência de padrão)
++- Versionamento inicial da API (1.0)
++- Organização por tags
++
+ ## ✅ Release 0.2.0 — Fundação concluída
+ 
+ ### Principais entregas
+@@ -181,9 +202,16 @@ Versões homologadas:
+ 
+ # Próximo Marco
+ 
+-## Release 0.3.0
++## ✅ Marco Técnico — SPR-005 concluída (Documentação da API)
+ 
+-Documentação completa da API com Swagger/OpenAPI.
++Swagger/OpenAPI disponível em `/api/docs`, com o módulo Health como
++referência de padrão para os módulos futuros.
++
++Permanece dentro da Release 0.2 — Swagger é infraestrutura, não
++funcionalidade de negócio. A Release 0.3 só se inicia quando existir a
++primeira funcionalidade real de produto.
++
++Próxima sprint: **SPR-006 — Segurança (JWT)**.
+ 
+ ---
+ 
+@@ -201,25 +229,19 @@ Documentação completa da API com Swagger/OpenAPI.
+ | Testes E2E | ✅ |
+ | Build | ✅ |
+ | Lint | ✅ |
+-| Swagger | ⬜ |
++| Swagger | ✅ |
+ | CI/CD | ⬜ |
+ 
+ ---
+ 
+ # Próxima Sprint
+ 
+-## SPR-005
+-
+-### Objetivo
+-
+-Implementar Swagger/OpenAPI como documentação oficial da API.
+-
+-### Resultado Esperado
+-
+-Disponibilizar a documentação automática em:
++## SPR-006 — Segurança (JWT)
+ 
+-```
+-http://localhost:3001/api/docs
+-```
++## Pendências conhecidas (não bloqueantes)
+ 
+-para servir como padrão para todos os módulos futuros.
++- `ValidationPipe` global: `ARCHITECTURE.md` lista como convenção adotada, mas
++  ainda não está implementado no código. Identificado na validação inicial da
++  SPR-005; recomenda-se resolver antes ou junto da SPR-006, quando a
++  introdução de DTOs de entrada (request) fará a ausência de validação ter
++  impacto real.
+diff --git a/apps/api/package.json b/apps/api/package.json
+index d5704c8..2cffa31 100644
+--- a/apps/api/package.json
++++ b/apps/api/package.json
+@@ -25,6 +25,7 @@
+     "@nestjs/core": "^11.0.1",
+     "@nestjs/mapped-types": "*",
+     "@nestjs/platform-express": "^11.0.1",
++    "@nestjs/swagger": "^11.4.6",
+     "@prisma/adapter-pg": "^7.8.0",
+     "@prisma/client": "^7.8.0",
+     "class-transformer": "^0.5.1",
+diff --git a/apps/api/src/app.controller.ts b/apps/api/src/app.controller.ts
+index cce879e..6b6de9c 100644
+--- a/apps/api/src/app.controller.ts
++++ b/apps/api/src/app.controller.ts
+@@ -1,11 +1,14 @@
+ import { Controller, Get } from '@nestjs/common';
++import { ApiOperation, ApiTags } from '@nestjs/swagger';
+ import { AppService } from './app.service';
+ 
++@ApiTags('App')
+ @Controller()
+ export class AppController {
+   constructor(private readonly appService: AppService) {}
+ 
+   @Get()
++  @ApiOperation({ summary: 'Endpoint raiz da aplicação' })
+   getHello(): string {
+     return this.appService.getHello();
+   }
+diff --git a/apps/api/src/main.ts b/apps/api/src/main.ts
+index b02d092..a0ccb58 100644
+--- a/apps/api/src/main.ts
++++ b/apps/api/src/main.ts
+@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
+ import { NestFactory } from '@nestjs/core';
+ import { AppModule } from './app.module';
+ import { AppConfigService } from './config/app-config.service';
++import { setupSwagger, SWAGGER_PATH } from './swagger.config';
+ 
+ async function bootstrap() {
+   const logger = new Logger('Bootstrap');
+@@ -15,6 +16,8 @@ async function bootstrap() {
+   // abrupta em vez de ser fechada de forma limpa.
+   app.enableShutdownHooks();
+ 
++  setupSwagger(app);
++
+   const appConfigService = app.get(AppConfigService);
+ 
+   const port = appConfigService.port;
+@@ -22,6 +25,7 @@ async function bootstrap() {
+   await app.listen(port);
+ 
+   logger.log(`🚀 API running on http://localhost:${port}`);
++  logger.log(`📚 Swagger docs at http://localhost:${port}/${SWAGGER_PATH}`);
+ }
+ 
+ void bootstrap();
+diff --git a/apps/api/src/modules/health/dto/health-response.dto.ts b/apps/api/src/modules/health/dto/health-response.dto.ts
+new file mode 100644
+index 0000000..105705e
+--- /dev/null
++++ b/apps/api/src/modules/health/dto/health-response.dto.ts
+@@ -0,0 +1,27 @@
++import { ApiProperty } from '@nestjs/swagger';
++
++export class HealthResponseDto {
++  @ApiProperty({
++    description: 'Indica se a API está operacional.',
++    example: 'ok',
++  })
++  status: string;
++
++  @ApiProperty({
++    description: 'Nome do serviço que respondeu à verificação.',
++    example: 'content-os-api',
++  })
++  service: string;
++
++  @ApiProperty({
++    description: 'Versão da API em execução.',
++    example: '1.0.0',
++  })
++  version: string;
++
++  @ApiProperty({
++    description: 'Data e hora da verificação, em formato ISO 8601.',
++    example: '2026-07-23T12:00:00.000Z',
++  })
++  timestamp: string;
++}
+diff --git a/apps/api/src/modules/health/health.controller.ts b/apps/api/src/modules/health/health.controller.ts
+index 0bb4840..4d59f5d 100644
+--- a/apps/api/src/modules/health/health.controller.ts
++++ b/apps/api/src/modules/health/health.controller.ts
+@@ -1,12 +1,25 @@
+ import { Controller, Get } from '@nestjs/common';
++import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+ import { HealthService } from './health.service';
++import { HealthResponseDto } from './dto/health-response.dto';
+ 
++@ApiTags('Health')
+ @Controller('health')
+ export class HealthController {
+   constructor(private readonly healthService: HealthService) {}
+ 
+   @Get()
+-  getHealth() {
++  @ApiOperation({
++    summary: 'Verifica a disponibilidade da API',
++    description:
++      'Endpoint de health check. Retorna o status atual do serviço, útil para monitoramento e orquestradores (Docker, Kubernetes, etc.).',
++  })
++  @ApiResponse({
++    status: 200,
++    description: 'API operacional.',
++    type: HealthResponseDto,
++  })
++  getHealth(): HealthResponseDto {
+     return this.healthService.getHealth();
+   }
+ }
+diff --git a/apps/api/src/modules/health/health.service.ts b/apps/api/src/modules/health/health.service.ts
+index ea539c5..c85b229 100644
+--- a/apps/api/src/modules/health/health.service.ts
++++ b/apps/api/src/modules/health/health.service.ts
+@@ -1,8 +1,9 @@
+ import { Injectable } from '@nestjs/common';
++import { HealthResponseDto } from './dto/health-response.dto';
+ 
+ @Injectable()
+ export class HealthService {
+-  getHealth() {
++  getHealth(): HealthResponseDto {
+     return {
+       status: 'ok',
+       service: 'content-os-api',
+diff --git a/apps/api/src/swagger.config.ts b/apps/api/src/swagger.config.ts
+new file mode 100644
+index 0000000..dc6d625
+--- /dev/null
++++ b/apps/api/src/swagger.config.ts
+@@ -0,0 +1,34 @@
++import { INestApplication } from '@nestjs/common';
++import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
++
++/**
++ * Caminho onde a documentação interativa (Swagger UI) fica disponível.
++ * Mantido como constante exportada para que outros pontos do bootstrap
++ * (ex.: logs de inicialização) possam referenciá-lo sem duplicar a string.
++ */
++export const SWAGGER_PATH = 'api/docs';
++
++/**
++ * Configura o OpenAPI/Swagger da API.
++ *
++ * Centralizado aqui (fora de main.ts) para que, conforme novos módulos de
++ * negócio forem chegando (Release 0.4+), a configuração do documento
++ * (tags, esquemas de segurança, etc.) tenha um único lugar para crescer,
++ * sem inflar o bootstrap da aplicação.
++ */
++export function setupSwagger(app: INestApplication): void {
++  const config = new DocumentBuilder()
++    .setTitle('Content OS API')
++    .setDescription(
++      'Plataforma inteligente para criação, organização e publicação de ' +
++        'conteúdo para redes sociais utilizando Inteligência Artificial.',
++    )
++    .setVersion('1.0')
++    .addTag('App', 'Endpoints gerais da aplicação')
++    .addTag('Health', 'Verificação de disponibilidade da API')
++    .build();
++
++  const document = SwaggerModule.createDocument(app, config);
++
++  SwaggerModule.setup(SWAGGER_PATH, app, document);
++}
+diff --git a/engineering/designs/SPR-005-swagger-openapi.md b/engineering/designs/SPR-005-swagger-openapi.md
+new file mode 100644
+index 0000000..c0f52fe
+--- /dev/null
++++ b/engineering/designs/SPR-005-swagger-openapi.md
+@@ -0,0 +1,107 @@
++# SPR-005 — Documentação da API (Swagger/OpenAPI)
++
++## Objetivo
++
++Estabelecer a infraestrutura oficial de documentação da API via Swagger/OpenAPI 3,
++servindo como padrão único a ser seguido por todos os módulos futuros — sem
++implementar nenhuma funcionalidade de negócio.
++
++## Estado atual
++
++`ARCHITECTURE.md` já listava "Swagger obrigatório" como convenção adotada e
++`VISION.md`/`PROJECT_STATUS.md` já previam a Release 0.3 como "Swagger", mas
++nenhuma configuração existia de fato — `@nestjs/swagger` não estava instalado.
++
++## Decisão
++
++- `@nestjs/swagger` (`^11.4.6`, compatível com `@nestjs/common`/`@nestjs/core`
++  `^11.0.1` já usados no projeto).
++- Configuração isolada em `src/swagger.config.ts` (função `setupSwagger(app)`),
++  fora de `main.ts` e fora de `src/config/` — essa última pasta é dedicada
++  exclusivamente ao `AppConfigModule`/`AppConfigService` (configuração de
++  variáveis de ambiente), então misturar a configuração do Swagger ali
++  diluiria essa fronteira já estabelecida na SPR-003.
++- Documentação disponível em `/api/docs` (UI) e `/api/docs-json` (spec OpenAPI
++  crua), conforme especificado.
++- Título "Content OS API", versão "1.0", descrição extraída do parágrafo de
++  abertura do `VISION.md`.
++- Organização por tags (`@ApiTags`) — uma tag por controller (`App`, `Health`),
++  preparando o padrão para os módulos de negócio que virão a seguir.
++- `HealthController`/`HealthService` documentados por completo: `@ApiOperation`,
++  `@ApiResponse` com schema tipado, e um DTO de resposta
++  (`HealthResponseDto`) com `@ApiProperty` (description + example) em cada
++  campo — primeiro exemplo concreto de "DTO documentado" a ser seguido pelos
++  módulos futuros.
++- `AppController` (endpoint raiz, herdado do boilerplate) recebeu apenas tag e
++  `@ApiOperation` mínimos, para não aparecer sem categoria na UI — sem criar
++  DTO para um retorno de string simples (evita over-engineering de um
++  endpoint que não é regra de negócio real).
++
++## Fora do escopo (intencionalmente não implementado)
++
++- **`ValidationPipe` global**: `ARCHITECTURE.md` já lista essa convenção, mas
++  ela não está implementada no código hoje. Constatado durante a validação
++  inicial desta Sprint, mas é uma preocupação independente do Swagger em si
++  (validação de request vs. documentação de schema) — registrado como
++  inconsistência a resolver em Sprint própria, não implementado aqui para não
++  extrapolar o escopo definido.
++- Autenticação/segurança no Swagger (`@ApiBearerAuth`, esquemas de segurança):
++  não há autenticação implementada ainda (prevista para Release 0.4) — não
++  há o que documentar agora.
++- Correção do valor hardcoded de `service`/`version` em `HealthService`
++  (poderia vir de `AppConfigService.appName`/`appVersion`): já sinalizado em
++  checkpoint anterior como melhoria cosmética não relacionada ao objetivo
++  desta Sprint. Mantido como estava.
++
++## Ajuste incidental necessário
++
++Ao instalar `@nestjs/swagger`, sua dependência transitiva `swagger-ui-dist`
++trouxe `@scarf/scarf` (pacote de telemetria) para o lockfile. O
++`pnpm-workspace.yaml` já tinha uma seção `allowBuilds` prevendo esse cenário,
++mas com um placeholder não resolvido (`'@scarf/scarf': set this to true or
++false`), o que fazia `pnpm install`/`pnpm lint` falharem com exit code 1.
++Resolvido definindo `'@scarf/scarf': false` — nega a execução do script de
++telemetria (sem necessidade funcional para o projeto), sem impedir o uso da
++biblioteca em si (`swagger-ui-dist` funciona normalmente sem seu script de
++post-install).
++
++## Impacto nas próximas Sprints
++
++- Todo módulo de negócio novo (Release 0.4 em diante) deve seguir o mesmo
++  padrão: `@ApiTags` no controller, `@ApiOperation`/`@ApiResponse` em cada
++  rota, DTOs de request/response com `@ApiProperty`.
++- Quando a autenticação (JWT) for implementada, `setupSwagger` em
++  `src/swagger.config.ts` é o único lugar que precisa ganhar
++  `.addBearerAuth()` no `DocumentBuilder`.
++
++## Melhorias futuras (documentadas, não implementadas)
++
++1. Implementar `ValidationPipe` global (`main.ts`), resolvendo a divergência
++   já existente entre `ARCHITECTURE.md` e o código.
++2. Adaptar `HealthService` para usar `AppConfigService.appName`/`appVersion`
++   em vez de valores hardcoded.
++3. Health check real de banco de dados (já registrado como melhoria futura
++   na SPR-004) poderia ganhar documentação Swagger própria quando implementado.
++
++## Refinamento documental (decisão do Arquiteto do Content-OS)
++
++Após revisão, o Arquiteto do projeto aprovou código, arquitetura e
++organização sem ressalvas, e solicitou um ajuste apenas de nomenclatura de
++versionamento, sem qualquer alteração de código:
++
++- **Versão do projeto mantida em `0.2.0`** (sem bump de versão). Justificativa: o
++  Swagger é infraestrutura de documentação, não uma funcionalidade real de
++  produto. Na leitura arquitetural adotada para o projeto, a SPR-005
++  permanece dentro da **Release 0.2** — a Release 0.3 só se inicia quando
++  existir a primeira funcionalidade de negócio entregue. As entregas da
++  SPR-005 foram fundidas na entrada `[0.2.0]` já existente do
++  `CHANGELOG.md`, em vez de abrir uma versão nova.
++- **"Release 0.3" renomeado para "Marco Técnico — SPR-005 concluída"** em
++  `PROJECT_STATUS.md`, tanto na seção "Último Marco" quanto em "Próximo
++  Marco", para não sugerir uma release de produto onde há apenas entrega de
++  infraestrutura.
++- **Próxima sprint explicitada como SPR-006 — Segurança (JWT)**, encerrando
++  formalmente o ciclo da SPR-005 e abrindo o planejamento da próxima.
++
++Nenhuma linha de código foi alterada por este refinamento — apenas
++`PROJECT_STATUS.md`, `CHANGELOG.md` e este próprio design doc.
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 71e5cd9..53388f6 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -35,6 +35,9 @@ importers:
+       '@nestjs/platform-express':
+         specifier: ^11.0.1
+         version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
++      '@nestjs/swagger':
++        specifier: ^11.4.6
++        version: 11.4.6(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)
+       '@prisma/adapter-pg':
+         specifier: ^7.8.0
+         version: 7.8.0
+@@ -937,6 +940,9 @@ packages:
+     resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
+     engines: {node: '>=8'}
+ 
++  '@microsoft/tsdoc@0.16.0':
++    resolution: {integrity: sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA==}
++
+   '@nestjs/cli@11.0.24':
+     resolution: {integrity: sha512-aIHxQLSYtXShifA3zwWIeznEsZnNa3Iz2QRykFj+sl9IcbERBHr5nH87FRgywM+He3NxoF5WazHfR8FsmVeWxw==}
+     engines: {node: '>= 20.11'}
+@@ -1015,6 +1021,23 @@ packages:
+       prettier:
+         optional: true
+ 
++  '@nestjs/swagger@11.4.6':
++    resolution: {integrity: sha512-Le136h2WC7HGsd70+WyK1qrm+Zq7kFxBLkYC1JgAVqNRCt8kNh7bMF7Qkn65D5j2t/aks0+VbWmUVlYIwPrs3A==}
++    peerDependencies:
++      '@fastify/static': ^8.0.0 || ^9.0.0 || ^10.0.0
++      '@nestjs/common': ^11.0.1
++      '@nestjs/core': ^11.0.1
++      class-transformer: '*'
++      class-validator: '*'
++      reflect-metadata: ^0.1.12 || ^0.2.0
++    peerDependenciesMeta:
++      '@fastify/static':
++        optional: true
++      class-transformer:
++        optional: true
++      class-validator:
++        optional: true
++
+   '@nestjs/testing@11.1.28':
+     resolution: {integrity: sha512-B+VgRxeLaH7jkOMgAyUP3N3rpFlisQ7JRxixRbgHvG6a0VgKbbkNSofKExexCgKmQQak80undb3+2kE1lUBmRQ==}
+     peerDependencies:
+@@ -1246,6 +1269,9 @@ packages:
+       '@types/react':
+         optional: true
+ 
++  '@scarf/scarf@1.4.0':
++    resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
++
+   '@sinclair/typebox@0.27.12':
+     resolution: {integrity: sha512-hhyNJ+nbR6ZR7pToHvllEFun9TL0sbL+tk/ON75lo+Xas054uez98qRbsuNt7MBCyZKK4+8Yli/OAGZhmfBZ/g==}
+ 
+@@ -2972,6 +2998,10 @@ packages:
+     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
+     hasBin: true
+ 
++  js-yaml@5.2.1:
++    resolution: {integrity: sha512-zfLtNfQqxVqq3uaTqSkh4x4hZw3KHobGUA0fJUj4wawW8bsQLTVqpHdXSIzidh7o+4lEW36tANuAGdaFx6Zgnw==}
++    hasBin: true
++
+   jsesc@3.1.0:
+     resolution: {integrity: sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==}
+     engines: {node: '>=6'}
+@@ -3876,6 +3906,9 @@ packages:
+     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
+     engines: {node: '>= 0.4'}
+ 
++  swagger-ui-dist@5.32.8:
++    resolution: {integrity: sha512-dgMdWXIgnI4zX4OPhKEdWnlDODbgm8W3AX0Ivn/BBqcUh6xZsBxhZMnvk6DJyRz1BTrj8dPxtarmEGgkz30oyA==}
++
+   symbol-observable@4.0.0:
+     resolution: {integrity: sha512-b19dMThMV4HVFynSAM1++gBHAbk2Tc/osgLIBZMKsyqh34jb2e8Os7T6ZW/Bt3pJFdBTd2JwAnAAEQV7rSNvcQ==}
+     engines: {node: '>=0.10'}
+@@ -5079,6 +5112,8 @@ snapshots:
+ 
+   '@lukeed/csprng@1.1.0': {}
+ 
++  '@microsoft/tsdoc@0.16.0': {}
++
+   '@nestjs/cli@11.0.24(@types/node@24.13.3)(prettier@3.7.4)':
+     dependencies:
+       '@angular-devkit/core': 19.2.27(chokidar@4.0.3)
+@@ -5197,6 +5232,21 @@ snapshots:
+     transitivePeerDependencies:
+       - chokidar
+ 
++  '@nestjs/swagger@11.4.6(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)':
++    dependencies:
++      '@microsoft/tsdoc': 0.16.0
++      '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
++      '@nestjs/mapped-types': 2.1.1(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)
++      js-yaml: 5.2.1
++      lodash: 4.18.1
++      path-to-regexp: 8.4.2
++      reflect-metadata: 0.2.2
++      swagger-ui-dist: 5.32.8
++    optionalDependencies:
++      class-transformer: 0.5.1
++      class-validator: 0.14.4
++
+   '@nestjs/testing@11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@nestjs/platform-express@11.1.28)':
+     dependencies:
+       '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+@@ -5410,6 +5460,8 @@ snapshots:
+     optionalDependencies:
+       '@types/react': 19.2.2
+ 
++  '@scarf/scarf@1.4.0': {}
++
+   '@sinclair/typebox@0.27.12': {}
+ 
+   '@sinclair/typebox@0.34.50':
+@@ -7586,6 +7638,10 @@ snapshots:
+     dependencies:
+       argparse: 2.0.1
+ 
++  js-yaml@5.2.1:
++    dependencies:
++      argparse: 2.0.1
++
+   jsesc@3.1.0: {}
+ 
+   json-buffer@3.0.1: {}
+@@ -8535,6 +8591,10 @@ snapshots:
+ 
+   supports-preserve-symlinks-flag@1.0.0: {}
+ 
++  swagger-ui-dist@5.32.8:
++    dependencies:
++      '@scarf/scarf': 1.4.0
++
+   symbol-observable@4.0.0: {}
+ 
+   synckit@0.11.13:
+diff --git a/pnpm-workspace.yaml b/pnpm-workspace.yaml
+index d317d60..61c96f1 100644
+--- a/pnpm-workspace.yaml
++++ b/pnpm-workspace.yaml
+@@ -3,6 +3,7 @@ packages:
+   - "packages/*"
+ allowBuilds:
+   '@prisma/engines': true
++  '@scarf/scarf': false
+   prisma: true
+   sharp: true
+   unrs-resolver: true
