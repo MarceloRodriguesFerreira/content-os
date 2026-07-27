@@ -31,7 +31,10 @@
 
 ## Sprint Atual
 
-**SPR-005 — Documentação da API (Swagger/OpenAPI)**
+**SPR-006 — Segurança (JWT)**
+
+SPR-005 (Documentação da API) foi oficialmente encerrada como Marco Técnico
+da Release 0.2 — ver "Último Marco".
 
 Última atualização:
 
@@ -82,7 +85,7 @@
 | Configuração Centralizada | ✅ Operacional |
 | Testes Unitários | ✅ Operacional |
 | Testes E2E | ✅ Operacional |
-| Swagger/OpenAPI | ⬜ Planejado |
+| Swagger/OpenAPI | ✅ Operacional |
 | Autenticação | ⬜ Planejado |
 | CI/CD | ⬜ Planejado |
 | Deploy | ⬜ Planejado |
@@ -107,9 +110,18 @@
 - ✅ Testes Unitários
 - ✅ Testes E2E
 
+## Documentação da API (SPR-005)
+
+- ✅ `@nestjs/swagger` configurado (`DocumentBuilder` + `SwaggerModule`)
+- ✅ OpenAPI 3 disponível em `/api/docs-json`
+- ✅ UI interativa em `/api/docs`
+- ✅ Versionamento inicial (1.0)
+- ✅ Organização por tags (`App`, `Health`)
+- ✅ Módulo Health documentado por completo (`@ApiOperation`, `@ApiResponse`, DTO com `@ApiProperty`)
+
 ---
 
-# Sprint Atual
+# SPR-005 — Backlog (concluído)
 
 ## Objetivo
 
@@ -117,13 +129,13 @@ Implementar a documentação completa da API utilizando Swagger/OpenAPI, estabel
 
 ## Backlog
 
-- [ ] Configuração do Swagger
-- [ ] OpenAPI
-- [ ] Versionamento da API
-- [ ] Documentação automática dos endpoints
-- [ ] DTOs documentados
-- [ ] Padronização das respostas
-- [ ] Ambiente `/api/docs`
+- [x] Configuração do Swagger
+- [x] OpenAPI
+- [x] Versionamento da API
+- [x] Documentação automática dos endpoints
+- [x] DTOs documentados
+- [x] Padronização das respostas
+- [x] Ambiente `/api/docs`
 
 ---
 
@@ -139,6 +151,15 @@ Planejado
 ---
 
 # Último Marco
+
+## ✅ Marco Técnico — SPR-005 concluída (Documentação da API)
+
+### Principais entregas
+
+- Swagger/OpenAPI configurado (`/api/docs`, `/api/docs-json`)
+- Módulo Health documentado por completo (referência de padrão)
+- Versionamento inicial da API (1.0)
+- Organização por tags
 
 ## ✅ Release 0.2.0 — Fundação concluída
 
@@ -181,9 +202,16 @@ Versões homologadas:
 
 # Próximo Marco
 
-## Release 0.3.0
+## ✅ Marco Técnico — SPR-005 concluída (Documentação da API)
 
-Documentação completa da API com Swagger/OpenAPI.
+Swagger/OpenAPI disponível em `/api/docs`, com o módulo Health como
+referência de padrão para os módulos futuros.
+
+Permanece dentro da Release 0.2 — Swagger é infraestrutura, não
+funcionalidade de negócio. A Release 0.3 só se inicia quando existir a
+primeira funcionalidade real de produto.
+
+Próxima sprint: **SPR-006 — Segurança (JWT)**.
 
 ---
 
@@ -201,25 +229,19 @@ Documentação completa da API com Swagger/OpenAPI.
 | Testes E2E | ✅ |
 | Build | ✅ |
 | Lint | ✅ |
-| Swagger | ⬜ |
+| Swagger | ✅ |
 | CI/CD | ⬜ |
 
 ---
 
 # Próxima Sprint
 
-## SPR-005
+## SPR-006 — Segurança (JWT)
 
-### Objetivo
+## Pendências conhecidas (não bloqueantes)
 
-Implementar Swagger/OpenAPI como documentação oficial da API.
-
-### Resultado Esperado
-
-Disponibilizar a documentação automática em:
-
-```
-http://localhost:3001/api/docs
-```
-
-para servir como padrão para todos os módulos futuros.
+- `ValidationPipe` global: `ARCHITECTURE.md` lista como convenção adotada, mas
+  ainda não está implementado no código. Identificado na validação inicial da
+  SPR-005; recomenda-se resolver antes ou junto da SPR-006, quando a
+  introdução de DTOs de entrada (request) fará a ausência de validação ter
+  impacto real.
