@@ -16,11 +16,12 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  it('/ (GET) — protegida pelo guard global desde a SPR-007 (não está na lista de rotas públicas)', () => {
+    return request(app.getHttpServer()).get('/').expect(401);
+  });
+
+  it('/health (GET) — pública, segue funcionando sem token', () => {
+    return request(app.getHttpServer()).get('/health').expect(200);
   });
 
   afterEach(async () => {

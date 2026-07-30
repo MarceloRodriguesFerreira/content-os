@@ -31,14 +31,14 @@
 
 ## Sprint Atual
 
-**SPR-006 — Segurança (JWT)**
+**SPR-007 — Implementação da Camada de Autenticação — ✅ Concluída**
 
-SPR-005 (Documentação da API) foi oficialmente encerrada como Marco Técnico
-da Release 0.2 — ver "Último Marco".
+SPR-006 (Design da Camada de Segurança) e ADR-002 (Estratégia de
+Autenticação) foram aceitas e implementadas integralmente.
 
 Última atualização:
 
-**23/07/2026**
+**29/07/2026**
 
 ---
 
@@ -86,7 +86,7 @@ da Release 0.2 — ver "Último Marco".
 | Testes Unitários | ✅ Operacional |
 | Testes E2E | ✅ Operacional |
 | Swagger/OpenAPI | ✅ Operacional |
-| Autenticação | ⬜ Planejado |
+| Autenticação (JWT) | ✅ Operacional |
 | CI/CD | ⬜ Planejado |
 | Deploy | ⬜ Planejado |
 
@@ -119,6 +119,18 @@ da Release 0.2 — ver "Último Marco".
 - ✅ Organização por tags (`App`, `Health`)
 - ✅ Módulo Health documentado por completo (`@ApiOperation`, `@ApiResponse`, DTO com `@ApiProperty`)
 
+## Segurança — Autenticação (SPR-006 design / SPR-007 implementação)
+
+- ✅ `AuthModule`: login, refresh (com rotação) e logout via JWT
+- ✅ `UsersModule`: `GET /users/me` (usuário autenticado)
+- ✅ Access token JWT (curta duração) + refresh token opaco hasheado (longa duração)
+- ✅ Rotação de refresh token com detecção de reuso (revogação em massa)
+- ✅ Guard global (`JwtAuthGuard` via `APP_GUARD`) + `@Public()` para exceções
+- ✅ Hash de senha via bcrypt
+- ✅ Modelo `RefreshToken` (Prisma) com relação a `User`
+- ✅ Swagger com Bearer Auth documentado (`Auth`, `Users`)
+- ✅ Testes unitários (`AuthService`, `UsersService`, `JwtStrategy`, `JwtAuthGuard`) e e2e do fluxo completo
+
 ---
 
 # SPR-005 — Backlog (concluído)
@@ -139,6 +151,30 @@ Implementar a documentação completa da API utilizando Swagger/OpenAPI, estabel
 
 ---
 
+# SPR-007 — Backlog (concluído)
+
+## Objetivo
+
+Implementar integralmente a camada de autenticação do Content-OS, seguindo a SPR-006 e a ADR-002.
+
+## Backlog
+
+- [x] Instalação de dependências (`@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`, `bcrypt`)
+- [x] Configuration Module estendido (`JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`)
+- [x] Modelo `RefreshToken` no Prisma + migration
+- [x] `UsersModule` (repository, service, controller, DTOs)
+- [x] `AuthModule` (controller, service, strategy, guard, decorators, repository, DTOs)
+- [x] Guard global + rotas públicas (`/health`, `/auth/login`, `/auth/refresh`)
+- [x] Swagger com Bearer Auth
+- [x] Testes unitários e e2e
+
+## Pendências registradas durante a implementação (não resolvidas nesta sprint, por decisão explícita)
+
+- Não existe endpoint de registro de usuário (`POST /users` ou `/auth/register`) — a SPR-006 não documentou esse fluxo; decisão sobre como deve funcionar (público, convite, admin-only) fica para uma sprint futura.
+- `ValidationPipe` global ainda não está implementado, apesar de já haver DTOs de entrada reais em uso (`LoginDto`, `RefreshTokenDto`, `CreateUserDto`) — a pendência registrada na SPR-005 se tornou mais relevante agora.
+
+---
+
 # Developer Experience
 
 Planejado
@@ -151,6 +187,17 @@ Planejado
 ---
 
 # Último Marco
+
+## ✅ SPR-007 — Camada de Autenticação implementada
+
+### Principais entregas
+
+- AuthModule (login, refresh com rotação, logout) + UsersModule (`GET /users/me`)
+- JWT (access token) + refresh token opaco hasheado, com detecção de reuso
+- Guard global (`JwtAuthGuard`) + `@Public()`
+- Modelo `RefreshToken` no Prisma + migration
+- Swagger com Bearer Auth
+- Testes unitários e e2e do fluxo completo
 
 ## ✅ Marco Técnico — SPR-005 concluída (Documentação da API)
 
@@ -202,16 +249,16 @@ Versões homologadas:
 
 # Próximo Marco
 
-## ✅ Marco Técnico — SPR-005 concluída (Documentação da API)
+## ✅ SPR-007 — Camada de Autenticação concluída
 
-Swagger/OpenAPI disponível em `/api/docs`, com o módulo Health como
-referência de padrão para os módulos futuros.
+Login, refresh (com rotação e detecção de reuso) e logout via JWT,
+seguindo a SPR-006 e a ADR-002. Guard global protegendo toda rota por
+padrão, salvo exceções explícitas (`/health`, `/auth/login`, `/auth/refresh`).
 
-Permanece dentro da Release 0.2 — Swagger é infraestrutura, não
-funcionalidade de negócio. A Release 0.3 só se inicia quando existir a
-primeira funcionalidade real de produto.
+Ainda dentro da Release 0.2 (autenticação é fundação, não funcionalidade
+de negócio final).
 
-Próxima sprint: **SPR-006 — Segurança (JWT)**.
+Próxima sprint: a definir.
 
 ---
 
@@ -230,18 +277,23 @@ Próxima sprint: **SPR-006 — Segurança (JWT)**.
 | Build | ✅ |
 | Lint | ✅ |
 | Swagger | ✅ |
+| Autenticação (JWT) | ✅ |
 | CI/CD | ⬜ |
 
 ---
 
 # Próxima Sprint
 
-## SPR-006 — Segurança (JWT)
+A definir.
 
 ## Pendências conhecidas (não bloqueantes)
 
-- `ValidationPipe` global: `ARCHITECTURE.md` lista como convenção adotada, mas
-  ainda não está implementado no código. Identificado na validação inicial da
-  SPR-005; recomenda-se resolver antes ou junto da SPR-006, quando a
-  introdução de DTOs de entrada (request) fará a ausência de validação ter
-  impacto real.
+- `ValidationPipe` global ainda não implementado (`ARCHITECTURE.md` lista
+  como convenção adotada). Agora há DTOs de entrada reais em produção
+  (`LoginDto`, `RefreshTokenDto`, `CreateUserDto`), então a ausência de
+  validação passou a ter impacto prático real — prioridade elevada.
+- Endpoint de registro de usuário não existe (decisão pendente: público,
+  convite, ou admin-only).
+- Passo operacional obrigatório após aplicar a SPR-007: rodar
+  `pnpm db:generate` e `pnpm db:migrate`/`migrate deploy` antes do build —
+  o Prisma Client committed ainda não conhece o modelo `RefreshToken`.

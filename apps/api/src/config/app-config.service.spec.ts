@@ -15,6 +15,11 @@ describe('AppConfigService', () => {
     database: {
       url: 'postgresql://user:pass@localhost:5432/db',
     },
+    jwt: {
+      secret: 'test-secret',
+      accessTtl: '15m',
+      refreshTtl: '7d',
+    },
   };
 
   function createService(): AppConfigService {
@@ -40,5 +45,17 @@ describe('AppConfigService', () => {
 
   it('expõe databaseUrl a partir de database.url', () => {
     expect(createService().databaseUrl).toBe(fakeConfig.database.url);
+  });
+
+  it('expõe jwtSecret a partir de jwt.secret', () => {
+    expect(createService().jwtSecret).toBe('test-secret');
+  });
+
+  it('expõe jwtAccessTtl a partir de jwt.accessTtl', () => {
+    expect(createService().jwtAccessTtl).toBe('15m');
+  });
+
+  it('expõe jwtRefreshTtl a partir de jwt.refreshTtl', () => {
+    expect(createService().jwtRefreshTtl).toBe('7d');
   });
 });

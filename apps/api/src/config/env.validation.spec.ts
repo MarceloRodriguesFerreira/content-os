@@ -7,6 +7,9 @@ describe('env.validation', () => {
     DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
     APP_NAME: 'Content OS',
     APP_VERSION: '0.2.0',
+    JWT_SECRET: 'test-secret',
+    JWT_ACCESS_TTL: '15m',
+    JWT_REFRESH_TTL: '7d',
   };
 
   it('deve validar e converter um conjunto de variáveis válido', () => {
@@ -39,5 +42,12 @@ describe('env.validation', () => {
 
   it('deve lançar erro quando APP_NAME estiver vazio', () => {
     expect(() => validate({ ...validEnv, APP_NAME: '' })).toThrow(/APP_NAME/);
+  });
+
+  it('deve lançar erro quando JWT_SECRET estiver ausente', () => {
+    const envWithoutJwtSecret: Record<string, string> = { ...validEnv };
+    delete envWithoutJwtSecret.JWT_SECRET;
+
+    expect(() => validate(envWithoutJwtSecret)).toThrow(/JWT_SECRET/);
   });
 });
