@@ -1,8 +1,35 @@
 # Changelog
 
-## [0.2.0] - 2026-07-23
+Todas as mudanças relevantes deste projeto serão documentadas neste arquivo.
 
-### Added
+O formato segue as recomendações do Keep a Changelog e utiliza Versionamento Semântico (SemVer).
+
+---
+
+# [0.2.0] - 2026-07-30
+
+## Added
+
+### Fundação da Plataforma
+
+- Monorepo utilizando Turborepo + pnpm
+- Backend NestJS 11
+- Frontend Next.js
+- PostgreSQL
+- Docker Compose
+- Prisma ORM
+- Primeira migration do banco de dados
+- Estrutura oficial de engenharia
+- ADRs
+- Design Docs
+- Templates
+- Standards
+- Checklists
+- Runbooks
+
+---
+
+### SPR-003 — Configuração Centralizada
 
 - AppConfigModule
 - AppConfigService
@@ -11,44 +38,127 @@
 - Graceful Shutdown do Prisma
 - Logging do lifecycle do Prisma
 - Testes unitários do PrismaService
-- Testes E2E
+- Testes End-to-End
+
+---
+
+### SPR-004 — Fundação de Persistência
+
+- Estrutura definitiva do Prisma
+- Organização das migrations
+- Integração do PostgreSQL
+- Base para persistência dos módulos futuros
+
+---
+
+### SPR-005 — Swagger / OpenAPI
+
+- Configuração completa do `@nestjs/swagger`
+- DocumentBuilder
+- SwaggerModule
+- OpenAPI 3
+- Interface interativa disponível em `/api/docs`
+- Documento OpenAPI disponível em `/api/docs-json`
+- Organização por Tags (`App` e `Health`)
+- DTO `HealthResponseDto` documentado
+- Documentação automática dos endpoints
+- Versionamento inicial da API
+
+---
+
+### SPR-006 — Arquitetura de Segurança
+
+- ADR-002
+- Design completo da camada de autenticação
+- Estratégia JWT
+- Estratégia de Refresh Token
+- Estratégia de rotação
+- Estratégia de detecção de reuso
+- Definição do Guard Global
+- Estratégia para autenticação Stateless
+
+---
+
+### SPR-007 — Camada de Autenticação
+
+- AuthModule
+- UsersModule
+- JWT Authentication
+- Access Token
+- Refresh Token
+- Refresh Token Rotation
+- Refresh Token Reuse Detection
+- Guard Global (`JwtAuthGuard`)
+- Decorators `@Public()` e `@CurrentUser()`
+- Estratégia JWT (`JwtStrategy`)
+- Hash de senha com bcrypt
+- Modelo `RefreshToken`
+- Migration Prisma para Refresh Tokens
+- Swagger Bearer Authentication
+- Endpoints:
+
+  - POST /auth/login
+  - POST /auth/refresh
+  - POST /auth/logout
+  - GET /users/me
+
+- Testes Unitários
+- Testes End-to-End
+
+---
+
+### Documentação
+
 - ENGINEERING_GUIDE.md
-- Templates de Engenharia
-- Guias de utilização para IA (Claude, ChatGPT e Copilot)
-- `@nestjs/swagger` configurado via `DocumentBuilder`/`SwaggerModule` (SPR-005)
-- Documentação interativa da API em `/api/docs` (SPR-005)
-- Especificação OpenAPI 3 crua em `/api/docs-json` (SPR-005)
-- `HealthResponseDto` documentado com `@ApiProperty` (descrições e exemplos) (SPR-005)
-- Organização da documentação por tags (`App`, `Health`) (SPR-005)
-- `AuthModule`: login, refresh (com rotação) e logout via JWT (SPR-007)
-- `UsersModule`: `GET /users/me` (SPR-007)
-- Refresh token opaco hasheado (SHA-256), com detecção de reuso e revogação em massa (SPR-007)
-- Guard global (`JwtAuthGuard` via `APP_GUARD`) + decorator `@Public()` (SPR-007)
-- Hash de senha via bcrypt (SPR-007)
-- Modelo `RefreshToken` no Prisma, com migration (SPR-007)
-- Variáveis de ambiente `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL` via `AppConfigService` (SPR-007)
-- Swagger com Bearer Auth (tags `Auth`, `Users`) (SPR-007)
-- Testes unitários (`AuthService`, `UsersService`, `JwtStrategy`, `JwtAuthGuard`) e e2e do fluxo de autenticação (SPR-007)
+- Guia para Claude
+- Guia para ChatGPT
+- Guia para GitHub Copilot
+- Atualização do PROJECT_STATUS.md
+- Atualização da documentação oficial
+- Retrospectivas das SPR-003 até SPR-007
 
-### Changed
+---
 
-- Centralização completa das configurações da aplicação
-- Integração do Prisma com AppConfigService
-- Reorganização da documentação oficial
-- Consolidação da documentação de produto na raiz do repositório
-- Remoção de documentação duplicada em engineering/
-- `HealthController`/`HealthService` com tipagem de retorno explícita
-  (`HealthResponseDto`) (SPR-005)
-- `AppController` com tag e operação documentadas no Swagger (SPR-005)
-- `AppModule` com `JwtAuthGuard` registrado globalmente (`APP_GUARD`) (SPR-007)
-- `/health` marcada explicitamente como pública (`@Public()`) (SPR-007)
+## Changed
 
-### Fixed
+### Arquitetura
 
-- Compatibilidade Prisma 7
-- Compatibilidade Jest 29 + ts-jest
-- Carregamento do .env em diferentes diretórios do monorepo
-- Encerramento correto das conexões Prisma
+- Configuração centralizada utilizando AppConfigService
+- Integração completa do Prisma com AppConfigService
+- Organização definitiva da documentação oficial
+- Consolidação da documentação de produto na raiz do projeto
+- Remoção de documentação duplicada
+- Swagger integrado ao processo oficial de desenvolvimento
+- Guard Global registrado via `APP_GUARD`
+- `/health` explicitamente marcada como rota pública
+
+---
+
+### API
+
+- Tipagem explícita do HealthController
+- Tipagem explícita do HealthService
+- Swagger utilizando Bearer Authentication
+- Toda rota protegida por padrão
+- Apenas rotas anotadas com `@Public()` permanecem públicas
+
+---
+
+## Fixed
+
+- Compatibilidade com Prisma 7
+- Compatibilidade com Jest 29
+- Compatibilidade com ts-jest
+- Carregamento do `.env` em diferentes diretórios do monorepo
+- Encerramento correto das conexões do Prisma
+- Graceful Shutdown do Prisma
 - Placeholder inválido de `allowBuilds` em `pnpm-workspace.yaml`
-  (`@scarf/scarf`), que quebrava `pnpm install`/`pnpm lint` após a
-  instalação do `@nestjs/swagger` (SPR-005)
+- Compatibilidade do Swagger com NestJS 11
+
+---
+
+## Known Limitations
+
+- Ainda não existe endpoint para registro de usuários (`POST /users` ou `/auth/register`).
+- O `ValidationPipe` global ainda não foi implementado.
+- A definição da estratégia de criação de usuários ficará para uma sprint futura.

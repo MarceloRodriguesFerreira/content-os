@@ -1,197 +1,317 @@
-# Content OS
+# 🚀 Content-OS
 
-## O que é?
+> Plataforma inteligente para criação, organização e publicação de conteúdo para redes sociais utilizando Inteligência Artificial.
 
-(Content OS será descrito aqui.)
+---
 
-## Tecnologias
+# O Projeto
+
+O **Content-OS** é uma plataforma construída para acelerar a criação de conteúdo para redes sociais através de Inteligência Artificial.
+
+O objetivo é permitir que empresas e criadores produzam conteúdo de forma organizada, reutilizável e integrada com múltiplas plataformas.
+
+O projeto está sendo desenvolvido utilizando arquitetura moderna baseada em Monorepo, APIs REST e integração com IA.
+
+---
+
+# Tecnologias
+
+## Frontend
 
 - Next.js
-- NestJS
+- React
+- TypeScript
+
+## Backend
+
+- NestJS 11
+- TypeScript
+
+## Banco de Dados
+
 - PostgreSQL
-- Prisma
+
+## ORM
+
+- Prisma 7
+
+## Monorepo
+
 - Turborepo
+- pnpm
 
-## Estrutura
+## Infraestrutura
 
+- Docker
+- Docker Compose
+
+---
+
+# Estrutura do Projeto
+
+```
 apps/
+    api/
+    web/
+
 packages/
+
 engineering/
-docs/                  Documentação complementar (diagramas, fluxos e material visual)
+    adrs/
+    designs/
+    standards/
+    runbooks/
+    templates/
+    checklists/
+    retrospectives/
 
-## Como executar
-
-(em construção)
-
-## Roadmap
-
-(ver PROJECT_STATUS.md)
-
-# Turborepo starter
-
-This Turborepo starter is maintained by the Turborepo core team.
-
-## Using this example
-
-Run the following command:
-
-```sh
-npx create-turbo@latest
+docs/
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+# Funcionalidades Implementadas
 
-### Apps and Packages
+## Fundação da Plataforma
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- ✅ Monorepo (Turborepo + pnpm)
+- ✅ Backend NestJS
+- ✅ Frontend Next.js
+- ✅ PostgreSQL
+- ✅ Docker Compose
+- ✅ Prisma ORM
+- ✅ Primeira Migration
+- ✅ Configuração centralizada
+- ✅ Graceful Shutdown
+- ✅ Logging do Prisma
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+---
 
-### Utilities
+## Documentação da API (SPR-005)
 
-This Turborepo has some additional tools already setup for you:
+- ✅ Swagger/OpenAPI
+- ✅ DocumentBuilder
+- ✅ SwaggerModule
+- ✅ Interface em `/api/docs`
+- ✅ Documento OpenAPI em `/api/docs-json`
+- ✅ Versionamento inicial da API
+- ✅ Organização por Tags
+- ✅ DTOs documentados
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+---
 
-### Build
+## Segurança (SPR-006 / SPR-007)
 
-To build all apps and packages, run the following command:
+- ✅ JWT Authentication
+- ✅ Access Token
+- ✅ Refresh Token
+- ✅ Rotação automática de Refresh Token
+- ✅ Detecção de reutilização de Refresh Token
+- ✅ Logout
+- ✅ Guard Global
+- ✅ Decorators `@Public()` e `@CurrentUser()`
+- ✅ Hash de senha utilizando bcrypt
+- ✅ Swagger Bearer Authentication
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+---
 
-```sh
-cd my-turborepo
-turbo build
+## Qualidade
+
+- ✅ Testes Unitários
+- ✅ Testes End-to-End
+- ✅ Lint
+- ✅ Build automatizado
+
+---
+
+# Estrutura da API
+
+## Health
+
+```
+GET /health
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+## Autenticação
+
+```
+POST /auth/login
+POST /auth/refresh
+POST /auth/logout
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## Usuários
 
-```sh
-turbo build --filter=docs
+```
+GET /users/me
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+# Como executar
+
+## Clonar
+
+```bash
+git clone https://github.com/MarceloRodriguesFerreira/content-os.git
+
+cd content-os
 ```
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+## Instalar dependências
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```bash
+pnpm install
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+## Subir o banco
+
+```bash
+docker compose up -d
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## Gerar o Prisma Client
 
-```sh
-turbo dev --filter=web
+```bash
+pnpm --filter api exec prisma generate
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+## Executar as migrations
+
+```bash
+pnpm --filter api exec prisma migrate dev
 ```
 
-### Remote Caching
+---
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## Executar Backend
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
+```bash
+pnpm --filter api start:dev
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
+## Executar Frontend
+
+```bash
+pnpm --filter web dev
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+---
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+# Testes
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## Unitários
 
-```sh
-turbo link
+```bash
+pnpm --filter api test
 ```
 
-Without global `turbo`:
+## End-to-End
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
+```bash
+pnpm --filter api test:e2e
 ```
 
-## Useful Links
+---
 
-Learn more about the power of Turborepo:
+# Qualidade
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+## Build
 
-# Documentação
+```bash
+pnpm --filter api build
+```
 
-| Documento | Descrição |
-|-----------|-----------|
+## Lint
+
+```bash
+pnpm --filter api lint
+```
+
+---
+
+# Swagger
+
+Após iniciar a API:
+
+```
+http://localhost:3000/api/docs
+```
+
+OpenAPI JSON:
+
+```
+http://localhost:3000/api/docs-json
+```
+
+---
+
+# Roadmap
+
+O roadmap oficial está disponível em:
+
+- `VISION.md`
+
+O andamento da implementação está disponível em:
+
+- `PROJECT_STATUS.md`
+
+---
+
+# Documentação Oficial
+
+| Documento | Finalidade |
+|------------|------------|
+| README.md | Visão geral do projeto |
 | VISION.md | Visão do Produto |
-| PROJECT_STATUS.md | Situação atual |
 | ARCHITECTURE.md | Arquitetura oficial |
-| engineering/ | ADRs, Standards, Runbooks e Designs |
+| PROJECT_STATUS.md | Situação atual do desenvolvimento |
+| CHANGELOG.md | Histórico de versões |
+| CONTRIBUTING.md | Guia de contribuição |
+| ENGINEERING_GUIDE.md | Processo oficial de engenharia |
+| engineering/ | ADRs, Designs, Standards, Templates, Checklists, Runbooks e Retrospectives |
+
+---
+
+# Status Atual
+
+**Release:** 0.2.0
+
+**Sprint Atual:** SPR-007 concluída ✅
+
+Principais entregas:
+
+- Camada completa de autenticação
+- JWT
+- Refresh Token
+- Swagger
+- Testes
+- Guard Global
+- Users Module
+- Auth Module
+
+---
+
+# Próximas Etapas
+
+As próximas funcionalidades serão definidas na **SPR-008**, conforme priorização do roadmap do projeto.
+
+---
+
+# Licença
+
+Projeto privado.

@@ -15,7 +15,7 @@
 | CHANGELOG.md | Histórico de releases |
 | CONTRIBUTING.md | Guia de contribuição |
 | ENGINEERING_GUIDE.md | Processo oficial de engenharia |
-| engineering/ | ADRs, Design Docs, Runbooks, Standards, Templates e Checklists |
+| engineering/ | ADRs, Design Docs, Runbooks, Standards, Templates, Checklists e Retrospectives |
 
 ---
 
@@ -32,13 +32,16 @@
 ## Sprint Atual
 
 **SPR-007 — Implementação da Camada de Autenticação — ✅ Concluída**
+Status:
+✔ Accepted
+✔ Merged
+✔ Frozen
 
-SPR-006 (Design da Camada de Segurança) e ADR-002 (Estratégia de
-Autenticação) foram aceitas e implementadas integralmente.
+SPR-006 (Design da Camada de Segurança) e ADR-002 (Estratégia de Autenticação) foram implementadas integralmente.
 
 Última atualização:
 
-**29/07/2026**
+**30/07/2026**
 
 ---
 
@@ -83,12 +86,29 @@ Autenticação) foram aceitas e implementadas integralmente.
 | PostgreSQL | ✅ Operacional |
 | Prisma ORM | ✅ Operacional |
 | Configuração Centralizada | ✅ Operacional |
+| Persistência | ✅ Operacional |
+| Swagger/OpenAPI | ✅ Operacional |
+| Autenticação JWT | ✅ Operacional |
 | Testes Unitários | ✅ Operacional |
 | Testes E2E | ✅ Operacional |
-| Swagger/OpenAPI | ✅ Operacional |
-| Autenticação (JWT) | ✅ Operacional |
+| Build | ✅ Operacional |
+| Lint | ✅ Operacional |
 | CI/CD | ⬜ Planejado |
 | Deploy | ⬜ Planejado |
+
+---
+
+# Sprints Concluídas
+
+| Sprint | Entrega | Status |
+|---------|----------|--------|
+| SPR-001 | Fundação do Projeto | ✅ |
+| SPR-002 | Infraestrutura Inicial | ✅ |
+| SPR-003 | Configuração Centralizada | ✅ |
+| SPR-004 | Fundação de Persistência (Prisma) | ✅ |
+| SPR-005 | Swagger / OpenAPI | ✅ |
+| SPR-006 | Design da Segurança + ADR-002 | ✅ |
+| SPR-007 | Camada de Autenticação JWT | ✅ |
 
 ---
 
@@ -110,68 +130,83 @@ Autenticação) foram aceitas e implementadas integralmente.
 - ✅ Testes Unitários
 - ✅ Testes E2E
 
+---
+
 ## Documentação da API (SPR-005)
 
-- ✅ `@nestjs/swagger` configurado (`DocumentBuilder` + `SwaggerModule`)
-- ✅ OpenAPI 3 disponível em `/api/docs-json`
-- ✅ UI interativa em `/api/docs`
-- ✅ Versionamento inicial (1.0)
-- ✅ Organização por tags (`App`, `Health`)
-- ✅ Módulo Health documentado por completo (`@ApiOperation`, `@ApiResponse`, DTO com `@ApiProperty`)
-
-## Segurança — Autenticação (SPR-006 design / SPR-007 implementação)
-
-- ✅ `AuthModule`: login, refresh (com rotação) e logout via JWT
-- ✅ `UsersModule`: `GET /users/me` (usuário autenticado)
-- ✅ Access token JWT (curta duração) + refresh token opaco hasheado (longa duração)
-- ✅ Rotação de refresh token com detecção de reuso (revogação em massa)
-- ✅ Guard global (`JwtAuthGuard` via `APP_GUARD`) + `@Public()` para exceções
-- ✅ Hash de senha via bcrypt
-- ✅ Modelo `RefreshToken` (Prisma) com relação a `User`
-- ✅ Swagger com Bearer Auth documentado (`Auth`, `Users`)
-- ✅ Testes unitários (`AuthService`, `UsersService`, `JwtStrategy`, `JwtAuthGuard`) e e2e do fluxo completo
+- ✅ Swagger configurado
+- ✅ OpenAPI 3
+- ✅ `/api/docs`
+- ✅ `/api/docs-json`
+- ✅ Versionamento inicial
+- ✅ Organização por Tags
+- ✅ DTOs documentados
+- ✅ Responses documentadas
 
 ---
 
-# SPR-005 — Backlog (concluído)
+## Segurança (SPR-006 + SPR-007)
+
+- ✅ AuthModule
+- ✅ UsersModule
+- ✅ Login JWT
+- ✅ Refresh Token
+- ✅ Logout
+- ✅ Rotação de Refresh Token
+- ✅ Detecção de Reuso
+- ✅ Refresh Token Hash (SHA-256)
+- ✅ Bcrypt
+- ✅ Guard Global
+- ✅ Decorator @Public()
+- ✅ Decorator @CurrentUser()
+- ✅ Bearer Authentication no Swagger
+- ✅ Estratégia JWT
+- ✅ Testes Unitários
+- ✅ Testes E2E
+
+---
+
+# SPR-005 — Backlog (Concluído)
 
 ## Objetivo
 
-Implementar a documentação completa da API utilizando Swagger/OpenAPI, estabelecendo um padrão único para todos os módulos futuros.
+Implantar a documentação oficial da API utilizando Swagger/OpenAPI.
 
-## Backlog
+### Entregas
 
-- [x] Configuração do Swagger
+- [x] Swagger
 - [x] OpenAPI
-- [x] Versionamento da API
-- [x] Documentação automática dos endpoints
-- [x] DTOs documentados
-- [x] Padronização das respostas
+- [x] DTOs
+- [x] Responses
+- [x] Versionamento
 - [x] Ambiente `/api/docs`
 
 ---
 
-# SPR-007 — Backlog (concluído)
+# SPR-007 — Backlog (Concluído)
 
 ## Objetivo
 
-Implementar integralmente a camada de autenticação do Content-OS, seguindo a SPR-006 e a ADR-002.
+Implementar a camada completa de autenticação seguindo a ADR-002.
 
-## Backlog
+### Entregas
 
-- [x] Instalação de dependências (`@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`, `bcrypt`)
-- [x] Configuration Module estendido (`JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`)
-- [x] Modelo `RefreshToken` no Prisma + migration
-- [x] `UsersModule` (repository, service, controller, DTOs)
-- [x] `AuthModule` (controller, service, strategy, guard, decorators, repository, DTOs)
-- [x] Guard global + rotas públicas (`/health`, `/auth/login`, `/auth/refresh`)
-- [x] Swagger com Bearer Auth
-- [x] Testes unitários e e2e
+- [x] JWT
+- [x] Refresh Token
+- [x] Rotação
+- [x] Detecção de Reuso
+- [x] Guard Global
+- [x] AuthModule
+- [x] UsersModule
+- [x] Estratégia JWT
+- [x] Bearer Authentication
+- [x] Testes Unitários
+- [x] Testes E2E
 
-## Pendências registradas durante a implementação (não resolvidas nesta sprint, por decisão explícita)
+### Pendências Registradas
 
-- Não existe endpoint de registro de usuário (`POST /users` ou `/auth/register`) — a SPR-006 não documentou esse fluxo; decisão sobre como deve funcionar (público, convite, admin-only) fica para uma sprint futura.
-- `ValidationPipe` global ainda não está implementado, apesar de já haver DTOs de entrada reais em uso (`LoginDto`, `RefreshTokenDto`, `CreateUserDto`) — a pendência registrada na SPR-005 se tornou mais relevante agora.
+- Endpoint de registro de usuários.
+- ValidationPipe Global.
 
 ---
 
@@ -179,48 +214,28 @@ Implementar integralmente a camada de autenticação do Content-OS, seguindo a S
 
 Planejado
 
+- [ ] pnpm setup
 - [ ] pnpm check
 - [ ] pnpm quality
-- [ ] pnpm setup
 - [ ] pnpm reset
 
 ---
 
 # Último Marco
 
-## ✅ SPR-007 — Camada de Autenticação implementada
+## ✅ SPR-007 concluída
 
 ### Principais entregas
 
-- AuthModule (login, refresh com rotação, logout) + UsersModule (`GET /users/me`)
-- JWT (access token) + refresh token opaco hasheado, com detecção de reuso
-- Guard global (`JwtAuthGuard`) + `@Public()`
-- Modelo `RefreshToken` no Prisma + migration
-- Swagger com Bearer Auth
-- Testes unitários e e2e do fluxo completo
-
-## ✅ Marco Técnico — SPR-005 concluída (Documentação da API)
-
-### Principais entregas
-
-- Swagger/OpenAPI configurado (`/api/docs`, `/api/docs-json`)
-- Módulo Health documentado por completo (referência de padrão)
-- Versionamento inicial da API (1.0)
-- Organização por tags
-
-## ✅ Release 0.2.0 — Fundação concluída
-
-### Principais entregas
-
-- Configuração Centralizada
-- Fundação de Persistência
-- Prisma estabilizado
-- Graceful Shutdown
-- Logging do lifecycle
+- AuthModule
+- UsersModule
+- JWT Authentication
+- Refresh Token Rotation
+- Reuse Detection
+- Global Guard
+- Swagger Bearer Authentication
 - Testes Unitários
 - Testes E2E
-- Documentação consolidada
-- Processo oficial de Engenharia
 
 ---
 
@@ -228,37 +243,43 @@ Planejado
 
 ## Configuração
 
-- Em monorepos o `process.cwd()` pode variar conforme o comando executado.
-- O carregamento do `.env` deve considerar diferentes diretórios.
-
-## Testes
-
-Versões homologadas:
-
-- Jest 29.7.x
-- ts-jest 29.4.x
-- @types/jest 29.5.x
+- O carregamento do `.env` deve considerar ambientes distintos (desenvolvimento, testes e produção).
+- Em monorepos, o `process.cwd()` varia conforme o comando executado.
 
 ## Prisma
 
-- O lifecycle precisa ser controlado explicitamente.
-- Toda conexão deve ser encerrada corretamente.
-- Graceful Shutdown evita conexões pendentes.
+- Sempre regenerar o Prisma Client após alterações no schema.
+- Migrations devem fazer parte da entrega da sprint.
+
+## Testes
+
+- O ambiente de testes deve possuir configuração própria (`.env.test`).
+- E2E não deve depender do `.env` de desenvolvimento.
+
+## Segurança
+
+- Toda rota deve ser protegida por padrão.
+- Apenas rotas explicitamente marcadas com `@Public()` permanecem públicas.
 
 ---
 
 # Próximo Marco
 
-## ✅ SPR-007 — Camada de Autenticação concluída
+## SPR-008 — Controle de Acesso (RBAC)
 
-Login, refresh (com rotação e detecção de reuso) e logout via JWT,
-seguindo a SPR-006 e a ADR-002. Guard global protegendo toda rota por
-padrão, salvo exceções explícitas (`/health`, `/auth/login`, `/auth/refresh`).
+Objetivos previstos
 
-Ainda dentro da Release 0.2 (autenticação é fundação, não funcionalidade
-de negócio final).
+- Roles
+- Permissions
+- Claims de autorização
+- RBAC
+- ValidationPipe Global
+- Registro de usuários
+- Documentação Swagger das novas rotas
 
-Próxima sprint: a definir.
+Release prevista:
+
+**0.3.x**
 
 ---
 
@@ -272,28 +293,36 @@ Próxima sprint: a definir.
 | PostgreSQL | ✅ |
 | Docker | ✅ |
 | Configuração Centralizada | ✅ |
+| Persistência | ✅ |
 | Testes Unitários | ✅ |
 | Testes E2E | ✅ |
 | Build | ✅ |
 | Lint | ✅ |
 | Swagger | ✅ |
-| Autenticação (JWT) | ✅ |
+| Autenticação JWT | ✅ |
 | CI/CD | ⬜ |
 
 ---
 
 # Próxima Sprint
 
-A definir.
+## SPR-008 — Controle de Acesso (RBAC)
 
-## Pendências conhecidas (não bloqueantes)
+### Objetivos
 
-- `ValidationPipe` global ainda não implementado (`ARCHITECTURE.md` lista
-  como convenção adotada). Agora há DTOs de entrada reais em produção
-  (`LoginDto`, `RefreshTokenDto`, `CreateUserDto`), então a ausência de
-  validação passou a ter impacto prático real — prioridade elevada.
-- Endpoint de registro de usuário não existe (decisão pendente: público,
-  convite, ou admin-only).
-- Passo operacional obrigatório após aplicar a SPR-007: rodar
-  `pnpm db:generate` e `pnpm db:migrate`/`migrate deploy` antes do build —
-  o Prisma Client committed ainda não conhece o modelo `RefreshToken`.
+- Roles
+- Permissions
+- Policies
+- Authorization
+- Claims no JWT
+- Registro de usuários
+- ValidationPipe Global
+
+---
+
+# Pendências Conhecidas (não bloqueantes)
+
+- Implementar ValidationPipe Global.
+- Definir estratégia de registro de usuários.
+- Definir modelo de Roles e Permissions.
+- Estruturar pipeline de CI/CD.
