@@ -26,6 +26,15 @@ export function setupSwagger(app: INestApplication): void {
     .setVersion('1.0')
     .addTag('App', 'Endpoints gerais da aplicação')
     .addTag('Health', 'Verificação de disponibilidade da API')
+    .addTag('Auth', 'Autenticação: login, refresh e logout')
+    .addTag('Users', 'Dados do usuário autenticado')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      description:
+        'Access token JWT obtido em POST /auth/login ou /auth/refresh.',
+    })
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

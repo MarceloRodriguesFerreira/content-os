@@ -36,4 +36,16 @@ export class AppConfigService {
   get databaseUrl(): string {
     return this.configService.get('database.url', { infer: true });
   }
+
+  get jwtSecret(): string {
+    return this.configService.get('jwt.secret', { infer: true });
+  }
+
+  get jwtAccessTtl(): string {
+    return this.configService.get('jwt.accessTtl', { infer: true });
+  }
+
+  get jwtRefreshTtl(): string {
+    return this.configService.get('jwt.refreshTtl', { infer: true });
+  }
 }

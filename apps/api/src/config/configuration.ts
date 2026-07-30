@@ -25,8 +25,19 @@ export interface DatabaseConfig {
 }
 
 /**
- * Grupos previstos para o futuro (ainda não implementados): jwt, storage,
- * ai, uploads, logging. Ao introduzir um deles, siga o mesmo padrão:
+ * Configuração da estratégia de autenticação (ADR-002 / SPR-006).
+ * `accessTtl`/`refreshTtl` seguem o formato aceito por `@nestjs/jwt`
+ * (`expiresIn`), ex.: "15m", "7d".
+ */
+export interface JwtConfig {
+  secret: string;
+  accessTtl: string;
+  refreshTtl: string;
+}
+
+/**
+ * Grupos previstos para o futuro (ainda não implementados): storage, ai,
+ * uploads, logging. Ao introduzir um deles, siga o mesmo padrão:
  * (1) crie a interface do grupo, (2) adicione-a aqui, (3) popule-a no
  * factory abaixo, (4) exponha os valores tipados via um método/getter
  * dedicado em AppConfigService — nunca via ConfigService.get() cru fora
@@ -35,6 +46,7 @@ export interface DatabaseConfig {
 export interface AppConfig {
   application: ApplicationConfig;
   database: DatabaseConfig;
+  jwt: JwtConfig;
 }
 
 /**
@@ -52,5 +64,10 @@ export default (): AppConfig => ({
   },
   database: {
     url: process.env.DATABASE_URL ?? '',
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET ?? '',
+    accessTtl: process.env.JWT_ACCESS_TTL ?? '15m',
+    refreshTtl: process.env.JWT_REFRESH_TTL ?? '7d',
   },
 });
