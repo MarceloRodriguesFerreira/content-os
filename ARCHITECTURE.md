@@ -92,6 +92,14 @@ engineering/
 # Organização em Camadas
 
 ```
+JwtAuthGuard (autenticação, global)
+
+↓
+
+RolesGuard (autorização, por rota — @Roles())
+
+↓
+
 Controller
 
 ↓
@@ -110,6 +118,10 @@ PostgreSQL
 Nenhum Controller acessa Prisma diretamente.
 
 Toda regra de negócio fica nos Services.
+
+Autenticação (quem é o usuário) e autorização (o que ele pode fazer) são camadas distintas:
+`JwtAuthGuard` é global (ADR-002); `RolesGuard` é aplicado apenas nas rotas que declaram
+`@Roles(...)` (ADR-004).
 
 ---
 
@@ -180,9 +192,10 @@ Release 0.4
 
 - JWT
 
-Release 0.5
-
-- RBAC
+> Nota: JWT e RBAC foram entregues antes da numeração de release acima ser alcançada (SPR-007 e
+> SPR-008, respectivamente, ambas dentro da faixa `0.2.x`/`0.3.x`). A consolidação da numeração
+> deste roadmap com o `CHANGELOG.md`/`PROJECT_STATUS.md` é um débito documental já registrado,
+> não tratado nesta sprint por estar fora do seu escopo.
 
 Release 0.6
 

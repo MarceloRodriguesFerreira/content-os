@@ -25,8 +25,8 @@ formalizada como ADR, não apenas como Design Doc.
 - **Hash de senha**: bcrypt, fator de custo 10.
 - **Autorização por padrão**: guard global (`APP_GUARD`) aplicando `JwtAuthGuard` a toda rota,
   com decorator `@Public()` para as exceções explícitas.
-- **RBAC (papéis/permissões) não faz parte desta ADR** — é tratado como decisão arquitetural
-  separada, quando a Release 0.5 (RBAC) do roadmap for iniciada.
+- **RBAC (papéis/permissões) não faz parte desta ADR** — é tratado em `ADR-004-rbac-strategy.md`
+  (SPR-008).
 
 O detalhamento completo (fluxos, modelagem, alternativas descartadas) está em
 `engineering/designs/SPR-006-security-foundation.md`; esta ADR registra apenas a decisão em si,
@@ -41,6 +41,6 @@ para consulta rápida futura, conforme padrão já usado pela ADR-001.
 - Mudar de estratégia de hash de senha, formato de token, ou modelo de revogação no futuro exige
   uma nova ADR que substitua esta, e potencialmente uma estratégia de migração para sessões já
   emitidas.
-- Implementar RBAC no futuro (Release 0.5) não deve exigir revisar esta ADR — o guard global e o
-  payload do JWT já preveem espaço para claims adicionais (ex.: `roles`) sem quebrar o que está
+- A implementação de RBAC (`ADR-004`, SPR-008) não exigiu revisar esta ADR — o guard global e o
+  payload do JWT já previam espaço para um claim adicional (`role`) sem quebrar o que está
   decidido aqui.

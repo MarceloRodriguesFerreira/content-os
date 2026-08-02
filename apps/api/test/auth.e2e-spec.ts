@@ -15,6 +15,15 @@ interface UserResponseBody {
   email: string;
 }
 
+/** Decodifica (sem verificar assinatura) o payload de um JWT — suficiente
+ * para inspecionar claims em teste, já que a assinatura já foi validada
+ * implicitamente pelo próprio backend ao aceitar o login. */
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  const [, payloadSegment] = token.split('.');
+  const json = Buffer.from(payloadSegment, 'base64url').toString('utf-8');
+  return JSON.parse(json) as Record<string, unknown>;
+}
+
 /**
  * Cobre o fluxo completo descrito na SPR-006 (seções 8.1–8.4):
  * login → acesso a rota protegida → refresh (rotação) → reuso detectado
@@ -133,5 +142,43 @@ describe('Auth (e2e)', () => {
       .post('/auth/refresh')
       .send({ refreshToken })
       .expect(401);
+  });
+
+  /**
+   * RBAC (SPR-008, Bloco A / ADR-004): valida que o token emitido carrega o
+   * claim `role` e que ele reflete o papel do usuário no banco — sem
+   * depender de uma rota protegida por `@Roles()`, já que nenhuma rota de
+   * negócio nova usa RBAC nesta sprint (ver `SPR-008-bloco-a-rbac.md`).
+   */
+  it('token emitido no login carrega o claim role do usuário (RBAC)', async () => {
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: testUser.email, password: testUser.password })
+      .expect(200);
+
+    const { accessToken } = loginResponse.body as AuthResponseBody;
+    const payload = decodeJwtPayload(accessToken);
+
+    // Usuário de teste é criado via UsersService.create(), que não recebe
+    // role explicitamente — deve assumir USER por padrão (schema.prisma).
+    expect(payload.role).toBe('USER');
+    expect(payload.email).toBe(testUser.email);
+  });
+
+  it('GET /users/me expõe o role do usuário autenticado', async () => {
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: testUser.email, password: testUser.password })
+      .expect(200);
+
+    const { accessToken } = loginResponse.body as AuthResponseBody;
+
+    const meResponse = await request(app.getHttpServer())
+      .get('/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const meBody = meResponse.body as UserResponseBody & { role: string };
+    expect(meBody.role).toBe('USER');
   });
 });

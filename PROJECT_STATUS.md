@@ -31,17 +31,21 @@
 
 ## Sprint Atual
 
-**SPR-007 — Implementação da Camada de Autenticação — ✅ Concluída**
+**SPR-008 — Autorização (RBAC) e HTTP Pipeline — 🟡 Bloco A concluído e aprovado**
 Status:
-✔ Accepted
-✔ Merged
-✔ Frozen
+✔ Design Freeze aprovado (`ADR-004`, `ADR-005`)
+✅ Bloco A (RBAC) — concluído, aprovado pelo Arquiteto-Chefe
+⬜ Bloco B (HTTP Pipeline) — aguardando nova autorização
+⬜ Bloco C (Plataforma/Versionamento) — aguardando aprovação do Bloco B
 
-SPR-006 (Design da Camada de Segurança) e ADR-002 (Estratégia de Autenticação) foram implementadas integralmente.
+SPR-007 (Camada de Autenticação) permanece ✅ Concluída — não foi alterada nesta sprint.
+
+Dívida técnica registrada nesta sprint (fora de escopo, encaminhada): `TECH-001` — versionamento
+do Prisma Client gerado. Ver `engineering/tech-debt/` e `engineering/backlog/infra-backlog.md`.
 
 Última atualização:
 
-**30/07/2026**
+**01/08/2026**
 
 ---
 
@@ -265,17 +269,17 @@ Planejado
 
 # Próximo Marco
 
-## SPR-008 — Controle de Acesso (RBAC)
+## SPR-008 — Autorização (RBAC) e HTTP Pipeline
 
-Objetivos previstos
+Objetivos (escopo congelado — ver `ADR-004`, `ADR-005`, `engineering/backlog/SPR-008.md`)
 
-- Roles
-- Permissions
-- Claims de autorização
-- RBAC
-- ValidationPipe Global
-- Registro de usuários
-- Documentação Swagger das novas rotas
+- Bloco A: RBAC via `enum Role` (`SUPER_ADMIN`/`ADMIN`/`USER`), papel único por usuário
+- Bloco B: ValidationPipe, ExceptionFilter e TransformInterceptor globais
+- Bloco C: Versionamento de API (`/v1`)
+
+Explicitamente fora de escopo nesta sprint: Permissions, Claims granulares, Policy Engine, ACL,
+múltiplos papéis por usuário, endpoint de registro de usuários, OAuth, MFA, Multi-tenancy
+(estes três últimos apenas documentados como pontos de extensão futura).
 
 Release prevista:
 
@@ -306,23 +310,25 @@ Release prevista:
 
 # Próxima Sprint
 
-## SPR-008 — Controle de Acesso (RBAC)
+## SPR-008 — Autorização (RBAC) e HTTP Pipeline
 
-### Objetivos
+### Objetivos (escopo congelado)
 
-- Roles
-- Permissions
-- Policies
-- Authorization
-- Claims no JWT
-- Registro de usuários
-- ValidationPipe Global
+- Bloco A: Roles (`enum` nativo, papel único por usuário)
+- Bloco B: ValidationPipe, ExceptionFilter e TransformInterceptor globais
+- Bloco C: Versionamento de API
 
 ---
 
 # Pendências Conhecidas (não bloqueantes)
 
-- Implementar ValidationPipe Global.
-- Definir estratégia de registro de usuários.
-- Definir modelo de Roles e Permissions.
+- Implementar ValidationPipe Global (Bloco B da SPR-008).
+- Implementar ExceptionFilter e TransformInterceptor globais (Bloco B da SPR-008).
+- Implementar versionamento de API (Bloco C da SPR-008).
+- Definir estratégia de registro de usuários (fora de escopo da SPR-008, ver backlog).
+- Modelo de Roles definido em `ADR-004` (papel único, sem Permissions/Claims — não é mais
+  pendência de definição; Permissions/Claims permanecem fora de escopo até haver gatilho real,
+  ver "Future Evolution" da `ADR-004`).
 - Estruturar pipeline de CI/CD.
+- `TECH-001`: revisar estratégia de versionamento do Prisma Client gerado (`apps/api/generated/`)
+  — adiado para sprint própria de infraestrutura, ver `engineering/backlog/infra-backlog.md`.

@@ -3,7 +3,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
 import { UsersRepository } from './repositories/users.repository';
-import { User } from '../../../generated/prisma/client';
+import { Role, User } from '../../../generated/prisma/client';
 
 jest.mock('bcrypt');
 
@@ -17,6 +17,7 @@ describe('UsersService', () => {
     password: 'hashed',
     name: 'Ana',
     active: true,
+    role: Role.USER,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   };
@@ -102,6 +103,7 @@ describe('UsersService', () => {
         email: 'ana@example.com',
         name: 'Ana',
         active: true,
+        role: Role.USER,
         createdAt: '2026-01-01T00:00:00.000Z',
       });
     });
