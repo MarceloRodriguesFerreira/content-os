@@ -8,12 +8,22 @@ datasource db {
   provider = "postgresql"
 }
 
+/// Papel único por usuário (RBAC — ADR-004). Sem tabelas Role/Permission
+/// nesta sprint: ver "Future Evolution" em ADR-004 para os gatilhos que
+/// justificariam evoluir para um modelo normalizado.
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
 model User {
   id          String   @id @default(cuid())
   email       String   @unique
   password    String
   name        String
   active      Boolean  @default(true)
+  role        Role     @default(USER)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

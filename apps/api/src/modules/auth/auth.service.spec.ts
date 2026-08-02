@@ -6,7 +6,7 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { AppConfigService } from '../../config/app-config.service';
 import { RefreshTokensRepository } from './repositories/refresh-tokens.repository';
-import { User } from '../../../generated/prisma/client';
+import { Role, User } from '../../../generated/prisma/client';
 
 jest.mock('bcrypt');
 
@@ -22,6 +22,7 @@ describe('AuthService', () => {
     password: 'hashed-password',
     name: 'Ana',
     active: true,
+    role: Role.USER,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   };
@@ -82,9 +83,28 @@ describe('AuthService', () => {
       expect(jwtService.signAsync).toHaveBeenCalledWith({
         sub: 'u1',
         email: 'ana@example.com',
+        role: Role.USER,
       });
       expect(refreshTokensRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ userId: 'u1' }),
+      );
+    });
+
+    it('propaga o role do usuário (não apenas USER) no payload do token', async () => {
+      const adminUser: User = { ...fakeUser, id: 'u2', role: Role.ADMIN };
+      usersService.findByEmail.mockResolvedValue(adminUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      refreshTokensRepository.create.mockResolvedValue({
+        id: 'rt2',
+      } as never);
+
+      await service.login({
+        email: 'ana@example.com',
+        password: 'S3nhaForte!23',
+      });
+
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ role: Role.ADMIN }),
       );
     });
 

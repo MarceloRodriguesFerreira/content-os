@@ -6,6 +6,36 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
 
 ---
 
+# [Unreleased]
+
+## Added
+
+- RBAC (SPR-008, Bloco A): `enum Role` (`SUPER_ADMIN`, `ADMIN`, `USER`) nativo do Prisma, papel
+  único por usuário, `@default(USER)` (`ADR-004-rbac-strategy.md`)
+- `JwtPayload` passa a incluir `role`
+- `@Roles()` decorator e `RolesGuard` (autorização por rota, não global — combina com o
+  `JwtAuthGuard` global já existente da SPR-007)
+- `GET /users/me` passa a expor `role` na resposta
+- `ADR-005-api-versioning-strategy.md` (estratégia de versionamento de API — decisão registrada,
+  implementação prevista para o Bloco C)
+- Testes unitários para `RolesGuard`; `AuthController` e `UsersController` passam a ter
+  cobertura de testes unitários (não existia antes desta sprint)
+
+## Known Limitations
+
+- Os 2 testes E2E que verificam o claim `role` no token dependem de uma regeneração real do
+  Prisma Client (`prisma generate`) local antes de serem considerados definitivamente
+  confirmados — ver relatório técnico do Bloco A.
+
+## Technical Debt
+
+- `TECH-001` registrado: estratégia de versionamento do Prisma Client gerado
+  (`apps/api/generated/`) — explicitamente fora do escopo desta sprint, encaminhado para uma
+  sprint própria de infraestrutura (`engineering/backlog/infra-backlog.md`, futura
+  `ADR-006-generated-artifacts-versioning-policy.md`).
+
+---
+
 # [0.2.0] - 2026-07-30
 
 ## Added

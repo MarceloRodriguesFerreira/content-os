@@ -64,6 +64,7 @@ export class UsersService {
       email: user.email,
       name: user.name,
       active: user.active,
+      role: user.role,
       createdAt: user.createdAt.toISOString(),
     };
   }
