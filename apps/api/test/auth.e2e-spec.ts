@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -13,6 +13,21 @@ interface AuthResponseBody {
 
 interface UserResponseBody {
   email: string;
+  role: string;
+}
+
+/** Formato padrão de resposta de sucesso desde o Bloco B (ADR-007). */
+interface SuccessEnvelope<T> {
+  success: true;
+  data: T;
+  timestamp: string;
+}
+
+interface ErrorEnvelope {
+  success: false;
+  error: { statusCode: number; error: string; message: string | string[] };
+  path: string;
+  timestamp: string;
 }
 
 /** Decodifica (sem verificar assinatura) o payload de um JWT — suficiente
@@ -49,10 +64,10 @@ describe('Auth (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    // ValidationPipe global normalmente é responsabilidade de outra sprint
-    // (ver pendência registrada na SPR-006/SPR-007); aplicado aqui só no
-    // escopo do teste, para exercitar os DTOs com validação de verdade.
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+    // ValidationPipe, AllExceptionsFilter e TransformInterceptor vêm do
+    // próprio AppModule (APP_PIPE/APP_FILTER/APP_INTERCEPTOR, Bloco B da
+    // SPR-008 / ADR-007/ADR-003) — nenhuma configuração extra necessária
+    // aqui, ao contrário do que era preciso antes deste bloco.
     await app.init();
 
     prisma = app.get(PrismaService);
@@ -70,10 +85,15 @@ describe('Auth (e2e)', () => {
   });
 
   it('rejeita login com senha incorreta', async () => {
-    await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: testUser.email, password: 'senha-errada' })
       .expect(401);
+
+    // Envelope de erro (ADR-007): status HTTP não muda, só o formato do corpo.
+    const body = response.body as ErrorEnvelope;
+    expect(body.success).toBe(false);
+    expect(body.error.statusCode).toBe(401);
   });
 
   it('bloqueia rota protegida sem token', async () => {
@@ -86,8 +106,9 @@ describe('Auth (e2e)', () => {
       .send({ email: testUser.email, password: testUser.password })
       .expect(200);
 
-    const { accessToken, refreshToken } =
-      loginResponse.body as AuthResponseBody;
+    const { accessToken, refreshToken } = (
+      loginResponse.body as SuccessEnvelope<AuthResponseBody>
+    ).data;
     expect(accessToken).toEqual(expect.any(String));
     expect(refreshToken).toEqual(expect.any(String));
 
@@ -96,7 +117,7 @@ describe('Auth (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
-    const meBody = meResponse.body as UserResponseBody;
+    const meBody = (meResponse.body as SuccessEnvelope<UserResponseBody>).data;
     expect(meBody.email).toBe(testUser.email);
     expect(meBody).not.toHaveProperty('password');
 
@@ -105,7 +126,9 @@ describe('Auth (e2e)', () => {
       .send({ refreshToken })
       .expect(200);
 
-    const newTokens = refreshResponse.body as AuthResponseBody;
+    const newTokens = (
+      refreshResponse.body as SuccessEnvelope<AuthResponseBody>
+    ).data;
     expect(newTokens.refreshToken).not.toBe(refreshToken);
 
     // Reuso do refresh token antigo (já rotacionado) deve ser rejeitado
@@ -129,8 +152,9 @@ describe('Auth (e2e)', () => {
       .send({ email: testUser.email, password: testUser.password })
       .expect(200);
 
-    const { accessToken, refreshToken } =
-      loginResponse.body as AuthResponseBody;
+    const { accessToken, refreshToken } = (
+      loginResponse.body as SuccessEnvelope<AuthResponseBody>
+    ).data;
 
     await request(app.getHttpServer())
       .post('/auth/logout')
@@ -156,7 +180,9 @@ describe('Auth (e2e)', () => {
       .send({ email: testUser.email, password: testUser.password })
       .expect(200);
 
-    const { accessToken } = loginResponse.body as AuthResponseBody;
+    const { accessToken } = (
+      loginResponse.body as SuccessEnvelope<AuthResponseBody>
+    ).data;
     const payload = decodeJwtPayload(accessToken);
 
     // Usuário de teste é criado via UsersService.create(), que não recebe
@@ -171,14 +197,42 @@ describe('Auth (e2e)', () => {
       .send({ email: testUser.email, password: testUser.password })
       .expect(200);
 
-    const { accessToken } = loginResponse.body as AuthResponseBody;
+    const { accessToken } = (
+      loginResponse.body as SuccessEnvelope<AuthResponseBody>
+    ).data;
 
     const meResponse = await request(app.getHttpServer())
       .get('/users/me')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
-    const meBody = meResponse.body as UserResponseBody & { role: string };
+    const meBody = (meResponse.body as SuccessEnvelope<UserResponseBody>).data;
     expect(meBody.role).toBe('USER');
+  });
+
+  /**
+   * HTTP Pipeline (Bloco B / ADR-007): valida o envelope de erro produzido
+   * pelo ValidationPipe global quando um campo desconhecido é enviado
+   * (forbidNonWhitelisted) — cobre a integração ValidationPipe →
+   * AllExceptionsFilter de ponta a ponta.
+   */
+  it('rejeita campo desconhecido no login (ValidationPipe + envelope de erro)', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: testUser.email,
+        password: testUser.password,
+        isAdmin: true, // campo não declarado no LoginDto
+      })
+      .expect(400);
+
+    const body = response.body as ErrorEnvelope;
+    expect(body.success).toBe(false);
+    expect(body.error.statusCode).toBe(400);
+    expect(body.error.message).toEqual(
+      expect.arrayContaining([expect.stringContaining('isAdmin')]),
+    );
+    expect(body.path).toBe('/auth/login');
+    expect(body.timestamp).toEqual(expect.any(String));
   });
 });

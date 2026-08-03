@@ -20,12 +20,28 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
   implementação prevista para o Bloco C)
 - Testes unitários para `RolesGuard`; `AuthController` e `UsersController` passam a ter
   cobertura de testes unitários (não existia antes desta sprint)
+- HTTP Pipeline (SPR-008, Bloco B / `ADR-007-http-response-standardization.md`):
+  `ValidationPipe` global (`ADR-003`), `AllExceptionsFilter` global e `TransformInterceptor`
+  global — todos registrados via token de DI (`APP_PIPE`/`APP_FILTER`/`APP_INTERCEPTOR`) para
+  que produção e testes E2E usem exatamente o mesmo pipeline
+- Testes unitários para `AllExceptionsFilter` e `TransformInterceptor`; novo teste E2E cobrindo
+  `ValidationPipe` → `AllExceptionsFilter` de ponta a ponta (rejeição de campo desconhecido)
+
+## Changed
+
+- **BREAKING (Bloco B):** toda resposta de sucesso agora vem envelopada como
+  `{ success: true, data, timestamp }` (exceto `204 No Content`, que continua sem corpo); toda
+  resposta de erro agora vem como
+  `{ success: false, error: { statusCode, error, message }, path, timestamp }`. O **status HTTP
+  não muda** — só o formato do corpo. Como o produto ainda não tem consumidores externos
+  publicados, não há período de coexistência com o formato antigo. Ver `ADR-007`.
+- `auth.e2e-spec.ts` não aplica mais um `ValidationPipe` local próprio — passa a herdar do
+  `AppModule`, igual à produção.
 
 ## Known Limitations
 
-- Os 2 testes E2E que verificam o claim `role` no token dependem de uma regeneração real do
-  Prisma Client (`prisma generate`) local antes de serem considerados definitivamente
-  confirmados — ver relatório técnico do Bloco A.
+- (Nenhuma nesta seção — a limitação anterior sobre confirmação E2E do claim `role` foi resolvida
+  após o merge do Bloco A, com o Prisma Client regenerado de verdade.)
 
 ## Technical Debt
 

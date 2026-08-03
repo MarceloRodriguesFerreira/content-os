@@ -92,6 +92,10 @@ engineering/
 # Organização em Camadas
 
 ```
+ValidationPipe (validação de entrada, global)
+
+↓
+
 JwtAuthGuard (autenticação, global)
 
 ↓
@@ -113,7 +117,13 @@ Repository (Prisma)
 ↓
 
 PostgreSQL
+
+↓
+
+TransformInterceptor (padronização de resposta de sucesso, global)
 ```
+
+Em qualquer ponto de falha, `AllExceptionsFilter` (global) padroniza a resposta de erro.
 
 Nenhum Controller acessa Prisma diretamente.
 
@@ -122,6 +132,11 @@ Toda regra de negócio fica nos Services.
 Autenticação (quem é o usuário) e autorização (o que ele pode fazer) são camadas distintas:
 `JwtAuthGuard` é global (ADR-002); `RolesGuard` é aplicado apenas nas rotas que declaram
 `@Roles(...)` (ADR-004).
+
+Validação de entrada e padronização de resposta são camadas de HTTP Pipeline, ortogonais às
+regras de negócio: `ValidationPipe` (ADR-003), `AllExceptionsFilter` e `TransformInterceptor`
+(ADR-007) — todos globais, registrados via token de DI (`APP_PIPE`/`APP_FILTER`/
+`APP_INTERCEPTOR`) para que produção e testes E2E usem exatamente o mesmo pipeline.
 
 ---
 

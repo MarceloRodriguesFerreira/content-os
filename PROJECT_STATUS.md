@@ -31,11 +31,12 @@
 
 ## Sprint Atual
 
-**SPR-008 — Autorização (RBAC) e HTTP Pipeline — 🟡 Bloco A concluído e aprovado**
+**SPR-008 — Autorização (RBAC) e HTTP Pipeline — 🟡 Bloco B implementado, aguardando aprovação**
 Status:
-✔ Design Freeze aprovado (`ADR-004`, `ADR-005`)
+✔ Design Freeze aprovado (`ADR-004`, `ADR-005`, `ADR-007`)
 ✅ Bloco A (RBAC) — concluído, aprovado pelo Arquiteto-Chefe
-⬜ Bloco B (HTTP Pipeline) — aguardando nova autorização
+🟡 Bloco B (HTTP Pipeline) — implementado (`ValidationPipe`, `AllExceptionsFilter`,
+  `TransformInterceptor`), aguardando aprovação
 ⬜ Bloco C (Plataforma/Versionamento) — aguardando aprovação do Bloco B
 
 SPR-007 (Camada de Autenticação) permanece ✅ Concluída — não foi alterada nesta sprint.
@@ -45,7 +46,7 @@ do Prisma Client gerado. Ver `engineering/tech-debt/` e `engineering/backlog/inf
 
 Última atualização:
 
-**01/08/2026**
+**03/08/2026**
 
 ---
 
@@ -273,9 +274,9 @@ Planejado
 
 Objetivos (escopo congelado — ver `ADR-004`, `ADR-005`, `engineering/backlog/SPR-008.md`)
 
-- Bloco A: RBAC via `enum Role` (`SUPER_ADMIN`/`ADMIN`/`USER`), papel único por usuário
-- Bloco B: ValidationPipe, ExceptionFilter e TransformInterceptor globais
-- Bloco C: Versionamento de API (`/v1`)
+- Bloco A: RBAC via `enum Role` (`SUPER_ADMIN`/`ADMIN`/`USER`), papel único por usuário — ✅ concluído
+- Bloco B: ValidationPipe, ExceptionFilter e TransformInterceptor globais — 🟡 implementado, aguardando aprovação
+- Bloco C: Versionamento de API (`/v1`) — ⬜ aguardando aprovação do Bloco B
 
 Explicitamente fora de escopo nesta sprint: Permissions, Claims granulares, Policy Engine, ACL,
 múltiplos papéis por usuário, endpoint de registro de usuários, OAuth, MFA, Multi-tenancy
@@ -322,8 +323,6 @@ Release prevista:
 
 # Pendências Conhecidas (não bloqueantes)
 
-- Implementar ValidationPipe Global (Bloco B da SPR-008).
-- Implementar ExceptionFilter e TransformInterceptor globais (Bloco B da SPR-008).
 - Implementar versionamento de API (Bloco C da SPR-008).
 - Definir estratégia de registro de usuários (fora de escopo da SPR-008, ver backlog).
 - Modelo de Roles definido em `ADR-004` (papel único, sem Permissions/Claims — não é mais

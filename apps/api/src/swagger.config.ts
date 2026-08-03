@@ -21,7 +21,13 @@ export function setupSwagger(app: INestApplication): void {
     .setTitle('Content OS API')
     .setDescription(
       'Plataforma inteligente para criação, organização e publicação de ' +
-        'conteúdo para redes sociais utilizando Inteligência Artificial.',
+        'conteúdo para redes sociais utilizando Inteligência Artificial.\n\n' +
+        '**Formato de resposta (SPR-008, Bloco B / ADR-007):** toda resposta ' +
+        '2xx vem envelopada como `{ success: true, data, timestamp }`, em que ' +
+        '`data` é exatamente o schema documentado abaixo para cada rota — ' +
+        'exceto respostas `204 No Content` (ex.: `POST /auth/logout`), que não ' +
+        'têm corpo. Toda resposta de erro (4xx/5xx) vem como ' +
+        '`{ success: false, error: { statusCode, error, message }, path, timestamp }`.',
     )
     .setVersion('1.0')
     .addTag('App', 'Endpoints gerais da aplicação')

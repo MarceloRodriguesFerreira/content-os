@@ -29,8 +29,10 @@ Este documento cobre exclusivamente o `ValidationPipe`. As demais peças do HTTP
 passaram a fazer parte da SPR-008 (Bloco B), com design próprio, e portanto não estão mais
 fora do escopo da sprint — apenas fora do escopo *deste* documento:
 
-- Exception Filters — design doc próprio, a ser criado no início do Bloco B
-- Interceptors (Response/Error Envelope) — design doc próprio, a ser criado no início do Bloco B
+- Exception Filters — ver `ADR-007-http-response-standardization.md` e
+  `SPR-008-bloco-b-http-pipeline.md`
+- Interceptors (Response/Error Envelope) — ver `ADR-007-http-response-standardization.md` e
+  `SPR-008-bloco-b-http-pipeline.md`
 - Rate Limiter — permanece fora de escopo do produto nesta sprint
 - Serialization (`class-transformer` `@Exclude`/`@Expose` avançado) — permanece fora de escopo
 
