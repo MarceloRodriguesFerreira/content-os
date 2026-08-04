@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { configureApp } from '../src/bootstrap/configure-app';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { UsersService } from '../src/modules/users/users.service';
 
@@ -67,7 +68,10 @@ describe('Auth (e2e)', () => {
     // ValidationPipe, AllExceptionsFilter e TransformInterceptor vêm do
     // próprio AppModule (APP_PIPE/APP_FILTER/APP_INTERCEPTOR, Bloco B da
     // SPR-008 / ADR-007/ADR-003) — nenhuma configuração extra necessária
-    // aqui, ao contrário do que era preciso antes deste bloco.
+    // aqui. Versionamento (Bloco C / ADR-005) já não tem esse privilégio —
+    // não é provider, precisa de configureApp() explícito aqui também,
+    // igual a main.ts, para nunca divergir de produção.
+    configureApp(app);
     await app.init();
 
     prisma = app.get(PrismaService);
@@ -86,7 +90,7 @@ describe('Auth (e2e)', () => {
 
   it('rejeita login com senha incorreta', async () => {
     const response = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/v1/auth/login')
       .send({ email: testUser.email, password: 'senha-errada' })
       .expect(401);
 
@@ -97,12 +101,12 @@ describe('Auth (e2e)', () => {
   });
 
   it('bloqueia rota protegida sem token', async () => {
-    await request(app.getHttpServer()).get('/users/me').expect(401);
+    await request(app.getHttpServer()).get('/v1/users/me').expect(401);
   });
 
   it('login → acessa rota protegida → refresh (rotação) → logout', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/v1/auth/login')
       .send({ email: testUser.email, password: testUser.password })
       .expect(200);
 
@@ -113,7 +117,7 @@ describe('Auth (e2e)', () => {
     expect(refreshToken).toEqual(expect.any(String));
 
     const meResponse = await request(app.getHttpServer())
-      .get('/users/me')
+      .get('/v1/users/me')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
@@ -122,7 +126,7 @@ describe('Auth (e2e)', () => {
     expect(meBody).not.toHaveProperty('password');
 
     const refreshResponse = await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/v1/auth/refresh')
       .send({ refreshToken })
       .expect(200);
 
@@ -134,21 +138,21 @@ describe('Auth (e2e)', () => {
     // Reuso do refresh token antigo (já rotacionado) deve ser rejeitado
     // e revogar toda a família de tokens do usuário.
     await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/v1/auth/refresh')
       .send({ refreshToken })
       .expect(401);
 
     // Por causa da revogação em massa acima, até o token NOVO (que seria
     // válido) também deve ter sido revogado.
     await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/v1/auth/refresh')
       .send({ refreshToken: newTokens.refreshToken })
       .expect(401);
   });
 
   it('logout revoga o refresh token (uso subsequente falha)', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/v1/auth/login')
       .send({ email: testUser.email, password: testUser.password })
       .expect(200);
 
@@ -157,13 +161,13 @@ describe('Auth (e2e)', () => {
     ).data;
 
     await request(app.getHttpServer())
-      .post('/auth/logout')
+      .post('/v1/auth/logout')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({ refreshToken })
       .expect(204);
 
     await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/v1/auth/refresh')
       .send({ refreshToken })
       .expect(401);
   });
@@ -176,7 +180,7 @@ describe('Auth (e2e)', () => {
    */
   it('token emitido no login carrega o claim role do usuário (RBAC)', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/v1/auth/login')
       .send({ email: testUser.email, password: testUser.password })
       .expect(200);
 
@@ -191,9 +195,9 @@ describe('Auth (e2e)', () => {
     expect(payload.email).toBe(testUser.email);
   });
 
-  it('GET /users/me expõe o role do usuário autenticado', async () => {
+  it('GET /v1/users/me expõe o role do usuário autenticado', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/v1/auth/login')
       .send({ email: testUser.email, password: testUser.password })
       .expect(200);
 
@@ -202,7 +206,7 @@ describe('Auth (e2e)', () => {
     ).data;
 
     const meResponse = await request(app.getHttpServer())
-      .get('/users/me')
+      .get('/v1/users/me')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
@@ -218,7 +222,7 @@ describe('Auth (e2e)', () => {
    */
   it('rejeita campo desconhecido no login (ValidationPipe + envelope de erro)', async () => {
     const response = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/v1/auth/login')
       .send({
         email: testUser.email,
         password: testUser.password,
@@ -232,7 +236,7 @@ describe('Auth (e2e)', () => {
     expect(body.error.message).toEqual(
       expect.arrayContaining([expect.stringContaining('isAdmin')]),
     );
-    expect(body.path).toBe('/auth/login');
+    expect(body.path).toBe('/v1/auth/login');
     expect(body.timestamp).toEqual(expect.any(String));
   });
 });

@@ -1,9 +1,6 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-
 import { AppConfigModule } from './config/app-config.module';
 import { HealthModule } from './modules/health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -21,9 +18,8 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     AuthModule,
     UsersModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     {
       // ValidationPipe global (ADR-003): whitelist + forbidNonWhitelisted
       // rejeitam campos desconhecidos; transform + enableImplicitConversion

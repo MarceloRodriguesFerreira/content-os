@@ -26,8 +26,19 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
   que produção e testes E2E usem exatamente o mesmo pipeline
 - Testes unitários para `AllExceptionsFilter` e `TransformInterceptor`; novo teste E2E cobrindo
   `ValidationPipe` → `AllExceptionsFilter` de ponta a ponta (rejeição de campo desconhecido)
+- Versionamento de API (SPR-008, Bloco C / `ADR-005-api-versioning-strategy.md`): URI Versioning
+  nativo do NestJS, `defaultVersion: '1'`
+- `apps/api/src/bootstrap/configure-app.ts` (`configureApp()`): configuração de bootstrap
+  compartilhada entre `main.ts` e os testes E2E — evita divergência em configurações que não são
+  expressáveis via token de DI (como `app.enableVersioning()`)
+- Testes E2E cobrindo o versionamento: `/health` fora de `/v1`, `GET /` removida (404)
 
 ## Changed
+
+- **BREAKING (Bloco C):** todas as rotas de negócio migram para `/v1`: `/auth/login` →
+  `/v1/auth/login`, `/auth/refresh` → `/v1/auth/refresh`, `/auth/logout` → `/v1/auth/logout`,
+  `/users/me` → `/v1/users/me`. `/health` permanece em `/health` (fora do versionamento,
+  `VERSION_NEUTRAL`). Ver `ADR-005`.
 
 - **BREAKING (Bloco B):** toda resposta de sucesso agora vem envelopada como
   `{ success: true, data, timestamp }` (exceto `204 No Content`, que continua sem corpo); toda
@@ -37,6 +48,12 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
   publicados, não há período de coexistência com o formato antigo. Ver `ADR-007`.
 - `auth.e2e-spec.ts` não aplica mais um `ValidationPipe` local próprio — passa a herdar do
   `AppModule`, igual à produção.
+
+## Removed
+
+- `GET /` (rota raiz), `AppController` e `AppService` — artefato do scaffold padrão do NestJS,
+  sem função de negócio, documentação ou consumidor conhecido. Ver `ADR-005`, seção "Avaliação de
+  `GET /`".
 
 ## Known Limitations
 

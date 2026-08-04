@@ -126,6 +126,10 @@ docs/
 
 # Estrutura da API
 
+> A partir da SPR-008 (Bloco C), toda rota de negócio vive sob `/v1` (URI Versioning nativo do
+> NestJS — `ADR-005`). `/health` permanece fora do versionamento, por ser consumido por
+> infraestrutura (orquestradores, monitoramento), não por clientes de negócio.
+
 ## Health
 
 ```
@@ -137,9 +141,9 @@ GET /health
 ## Autenticação
 
 ```
-POST /auth/login
-POST /auth/refresh
-POST /auth/logout
+POST /v1/auth/login
+POST /v1/auth/refresh
+POST /v1/auth/logout
 ```
 
 ---
@@ -147,7 +151,7 @@ POST /auth/logout
 ## Usuários
 
 ```
-GET /users/me
+GET /v1/users/me
 ```
 
 ---

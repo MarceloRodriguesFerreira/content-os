@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
 import { setupSwagger, SWAGGER_PATH } from './swagger.config';
+import { configureApp } from './bootstrap/configure-app';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -16,6 +17,10 @@ async function bootstrap() {
   // abrupta em vez de ser fechada de forma limpa.
   app.enableShutdownHooks();
 
+  // Ordem obrigatória: configureApp() habilita o versionamento antes do
+  // Swagger ser montado — caso contrário, o documento OpenAPI é gerado sem
+  // os paths /v1/... (ver ADR-005, SPR-008-bloco-c-platform.md).
+  configureApp(app);
   setupSwagger(app);
 
   const appConfigService = app.get(AppConfigService);
