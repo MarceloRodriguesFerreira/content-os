@@ -31,13 +31,13 @@
 
 ## Sprint Atual
 
-**SPR-008 — Autorização (RBAC) e HTTP Pipeline — 🟡 Bloco B implementado, aguardando aprovação**
+**SPR-008 — Autorização (RBAC) e HTTP Pipeline — 🟡 Bloco C implementado, aguardando aprovação**
 Status:
 ✔ Design Freeze aprovado (`ADR-004`, `ADR-005`, `ADR-007`)
 ✅ Bloco A (RBAC) — concluído, aprovado pelo Arquiteto-Chefe
-🟡 Bloco B (HTTP Pipeline) — implementado (`ValidationPipe`, `AllExceptionsFilter`,
-  `TransformInterceptor`), aguardando aprovação
-⬜ Bloco C (Plataforma/Versionamento) — aguardando aprovação do Bloco B
+✅ Bloco B (HTTP Pipeline) — concluído, aprovado pelo Arquiteto-Chefe
+🟡 Bloco C (Plataforma/Versionamento) — implementado (URI Versioning `/v1`, `configureApp()`
+  compartilhado entre produção e E2E, `GET /` removido), aguardando aprovação
 
 SPR-007 (Camada de Autenticação) permanece ✅ Concluída — não foi alterada nesta sprint.
 
@@ -276,7 +276,7 @@ Objetivos (escopo congelado — ver `ADR-004`, `ADR-005`, `engineering/backlog/S
 
 - Bloco A: RBAC via `enum Role` (`SUPER_ADMIN`/`ADMIN`/`USER`), papel único por usuário — ✅ concluído
 - Bloco B: ValidationPipe, ExceptionFilter e TransformInterceptor globais — 🟡 implementado, aguardando aprovação
-- Bloco C: Versionamento de API (`/v1`) — ⬜ aguardando aprovação do Bloco B
+- Bloco C: Versionamento de API (`/v1`) — 🟡 implementado, aguardando aprovação
 
 Explicitamente fora de escopo nesta sprint: Permissions, Claims granulares, Policy Engine, ACL,
 múltiplos papéis por usuário, endpoint de registro de usuários, OAuth, MFA, Multi-tenancy
@@ -323,7 +323,6 @@ Release prevista:
 
 # Pendências Conhecidas (não bloqueantes)
 
-- Implementar versionamento de API (Bloco C da SPR-008).
 - Definir estratégia de registro de usuários (fora de escopo da SPR-008, ver backlog).
 - Modelo de Roles definido em `ADR-004` (papel único, sem Permissions/Claims — não é mais
   pendência de definição; Permissions/Claims permanecem fora de escopo até haver gatilho real,
