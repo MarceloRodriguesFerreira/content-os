@@ -145,6 +145,14 @@ Primeira versão pública.
 
 # Roadmap Estratégico
 
+> **Convenção (adicionada na SPR-009, auditoria de consistência documental):** os números
+> abaixo (`Release 0.1`, `0.2`, ...) indicam a **ordem sequencial dos marcos** do produto, não
+> uma versão SemVer reservada 1:1 para cada um. A versão real publicada (`CHANGELOG.md`) segue
+> SemVer de verdade e pode agrupar mais de um marco em uma única release — como já aconteceu:
+> `0.2.0` entregou tanto "Swagger" quanto "Segurança" (marcos 0.3 e 0.4 aqui) juntos. Para saber o
+> que foi de fato lançado e em qual versão, `CHANGELOG.md` é a fonte de verdade; esta lista é a
+> fonte de verdade da **ordem de prioridade**, não do número de versão.
+
 ## Release 0.1
 
 Fundação

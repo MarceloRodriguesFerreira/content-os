@@ -31,22 +31,23 @@
 
 ## Sprint Atual
 
-**SPR-008 — Autorização (RBAC) e HTTP Pipeline — 🟡 Bloco C implementado, aguardando aprovação**
+**SPR-009 — Domínio: Projetos — 🟡 Design Freeze (aguardando aprovação do Arquiteto-Chefe)**
 Status:
-✔ Design Freeze aprovado (`ADR-004`, `ADR-005`, `ADR-007`)
-✅ Bloco A (RBAC) — concluído, aprovado pelo Arquiteto-Chefe
-✅ Bloco B (HTTP Pipeline) — concluído, aprovado pelo Arquiteto-Chefe
-🟡 Bloco C (Plataforma/Versionamento) — implementado (URI Versioning `/v1`, `configureApp()`
-  compartilhado entre produção e E2E, `GET /` removido), aguardando aprovação
+🟡 `ADR-008`, `ADR-009`, `ADR-010` propostas; `SPR-009-projects-domain.md` entregue para revisão
+⬜ Bloco A (Persistência) — aguardando aprovação do Design Freeze
+⬜ Bloco B (Regras de Negócio e Autorização) — aguardando aprovação do Bloco A
+⬜ Bloco C (API REST) — aguardando aprovação do Bloco B
 
-SPR-007 (Camada de Autenticação) permanece ✅ Concluída — não foi alterada nesta sprint.
+SPR-008 (Autorização RBAC e HTTP Pipeline) está ✅ **Concluída** — Blocos A, B e C aprovados e
+mergeados.
 
-Dívida técnica registrada nesta sprint (fora de escopo, encaminhada): `TECH-001` — versionamento
-do Prisma Client gerado. Ver `engineering/tech-debt/` e `engineering/backlog/infra-backlog.md`.
+Dívida técnica registrada (fora de escopo desta e da sprint anterior, encaminhada): `TECH-001` —
+versionamento do Prisma Client gerado. Ver `engineering/tech-debt/` e
+`engineering/backlog/infra-backlog.md`.
 
 Última atualização:
 
-**03/08/2026**
+**04/08/2026**
 
 ---
 
@@ -270,21 +271,26 @@ Planejado
 
 # Próximo Marco
 
-## SPR-008 — Autorização (RBAC) e HTTP Pipeline
+## SPR-009 — Domínio: Projetos
 
-Objetivos (escopo congelado — ver `ADR-004`, `ADR-005`, `engineering/backlog/SPR-008.md`)
+Objetivos (Design Freeze proposto — ver `ADR-008`, `ADR-009`, `ADR-010`,
+`engineering/backlog/SPR-009.md`, aguardando aprovação)
 
-- Bloco A: RBAC via `enum Role` (`SUPER_ADMIN`/`ADMIN`/`USER`), papel único por usuário — ✅ concluído
-- Bloco B: ValidationPipe, ExceptionFilter e TransformInterceptor globais — 🟡 implementado, aguardando aprovação
-- Bloco C: Versionamento de API (`/v1`) — 🟡 implementado, aguardando aprovação
+- Bloco A: Persistência (`model Project`, `ProjectsRepository`) — ⬜ aguardando aprovação do Design Freeze
+- Bloco B: Regras de negócio e autorização (`ProjectsService`, `ProjectOwnershipGuard`) — ⬜ aguardando aprovação do Bloco A
+- Bloco C: API REST (`ProjectsController`, DTOs, Swagger, testes E2E) — ⬜ aguardando aprovação do Bloco B
 
-Explicitamente fora de escopo nesta sprint: Permissions, Claims granulares, Policy Engine, ACL,
-múltiplos papéis por usuário, endpoint de registro de usuários, OAuth, MFA, Multi-tenancy
-(estes três últimos apenas documentados como pontos de extensão futura).
+Explicitamente fora de escopo nesta sprint: Campanha, Conteúdo, Publicação, colaboração
+multi-usuário em projetos, transferência de propriedade, `DELETE` físico, painel administrativo
+de listagem global.
 
 Release prevista:
 
-**0.3.x**
+Não atribuída antecipadamente (ver convenção adicionada em `VISION.md`, seção "Roadmap
+Estratégico" — nesta auditoria). SPR-008 (RBAC, HTTP Pipeline, Versionamento) ainda está em
+`[Unreleased]` no `CHANGELOG.md`, sem tag cortada. A versão real da SPR-009 será definida no
+momento em que uma release for de fato marcada, podendo agrupar SPR-008 e SPR-009 juntas ou não
+— decisão de release, não de roadmap.
 
 ---
 
@@ -305,25 +311,31 @@ Release prevista:
 | Lint | ✅ |
 | Swagger | ✅ |
 | Autenticação JWT | ✅ |
+| Autorização (RBAC) | ✅ |
+| HTTP Pipeline (Validation/Exception/Response) | ✅ |
+| Versionamento de API | ✅ |
+| Domínio de Negócio (Projetos) | 🟡 Design Freeze |
 | CI/CD | ⬜ |
 
 ---
 
 # Próxima Sprint
 
-## SPR-008 — Autorização (RBAC) e HTTP Pipeline
+Ainda não definida. Três trilhas permanecem registradas no backlog, deliberadamente fora da
+SPR-009 (decisão do Arquiteto-Chefe), cada uma pertencendo a uma frente distinta de evolução:
 
-### Objetivos (escopo congelado)
-
-- Bloco A: Roles (`enum` nativo, papel único por usuário)
-- Bloco B: ValidationPipe, ExceptionFilter e TransformInterceptor globais
-- Bloco C: Versionamento de API
+- `TECH-001`/`ADR-006` — política de versionamento de artefatos gerados (infra, ver
+  `engineering/backlog/infra-backlog.md`)
+- Endpoint público de registro de usuários (domínio de autenticação, a ser retomado quando o
+  fluxo de onboarding de usuários for iniciado)
+- Pipeline de CI/CD (DevOps/Plataforma, após consolidar a arquitetura funcional do produto)
 
 ---
 
 # Pendências Conhecidas (não bloqueantes)
 
-- Definir estratégia de registro de usuários (fora de escopo da SPR-008, ver backlog).
+- Definir estratégia de registro de usuários — não tratado na SPR-008 nem na SPR-009; retomado
+  junto do fluxo de onboarding de usuários.
 - Modelo de Roles definido em `ADR-004` (papel único, sem Permissions/Claims — não é mais
   pendência de definição; Permissions/Claims permanecem fora de escopo até haver gatilho real,
   ver "Future Evolution" da `ADR-004`).

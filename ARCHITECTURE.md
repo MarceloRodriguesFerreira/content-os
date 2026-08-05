@@ -197,29 +197,19 @@ Responsabilidades do PrismaModule:
 
 ---
 
-# Próximas Evoluções
+# Roadmap
 
-Release 0.3
+O roadmap estratégico do produto (sequência de marcos, não uma atribuição fixa de número de
+versão por marco) vive exclusivamente em `VISION.md`, seção "Roadmap Estratégico" — conforme a
+própria tabela de propósito documental deste projeto (`README.md`/`PROJECT_STATUS.md`): a
+visão de produto e o roadmap pertencem a `VISION.md`; este documento (`ARCHITECTURE.md`) trata
+de arquitetura, não de roadmap.
 
-- Swagger
+Este arquivo mantinha até a SPR-009 uma segunda lista de "Próximas Evoluções" com números de
+release próprios, que divergia de `VISION.md` em conteúdo (itens diferentes sob os mesmos
+números) e do `CHANGELOG.md` em fato (recursos listados como "futuros" que já haviam sido
+entregues). A causa raiz era ter duas fontes de verdade para a mesma informação — removida aqui,
+não apenas corrigida pontualmente, para não voltar a divergir a cada sprint.
 
-Release 0.4
-
-- JWT
-
-> Nota: JWT e RBAC foram entregues antes da numeração de release acima ser alcançada (SPR-007 e
-> SPR-008, respectivamente, ambas dentro da faixa `0.2.x`/`0.3.x`). A consolidação da numeração
-> deste roadmap com o `CHANGELOG.md`/`PROJECT_STATUS.md` é um débito documental já registrado,
-> não tratado nesta sprint por estar fora do seu escopo.
-
-Release 0.6
-
-- Upload
-
-Release 0.7
-
-- IA
-
-Release 1.0
-
-- Produção
+Números de versão real (SemVer) são atribuídos no momento em que uma release é de fato marcada,
+registrados em `CHANGELOG.md` — nunca reservados antecipadamente por item de roadmap.
