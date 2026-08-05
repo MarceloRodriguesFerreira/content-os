@@ -29,8 +29,32 @@ model User {
   updatedAt   DateTime @updatedAt
 
   refreshTokens RefreshToken[]
+  projects      Project[]
 
   @@map("users")
+}
+
+/// Primeiro agregado de negócio do domínio (ADR-008 / SPR-009, Bloco A).
+/// Ciclo de vida via `status`, não via DELETE físico — "excluir" um
+/// projeto significa arquivá-lo (ver ADR-008 para a justificativa).
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  ownerId     String
+  owner       User          @relation(fields: [ownerId], references: [id])
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([ownerId])
+  @@map("projects")
 }
 
 model RefreshToken {
