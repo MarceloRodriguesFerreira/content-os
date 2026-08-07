@@ -1,6 +1,6 @@
 # SPR-009 — Domínio: Projetos (Design Doc)
 
-Status: Proposed — aguardando aprovação do Arquiteto-Chefe antes de qualquer código.
+Status: Accepted
 
 ## Objetivo
 

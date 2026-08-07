@@ -92,9 +92,9 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
 
 - (Nenhuma nesta seção — a limitação anterior sobre confirmação E2E do claim `role` foi resolvida
   após o merge do Bloco A, com o Prisma Client regenerado de verdade.)
-- `ADR-008`, `ADR-009` e `ADR-010` permanecem com `Status: Proposed` nos respectivos arquivos,
-  apesar dos três blocos da SPR-009 já implementados sobre eles — pendência de governança
-  registrada, não bloqueante para a funcionalidade entregue.
+- (Nenhuma nesta seção — a pendência de governança anterior sobre `ADR-008`, `ADR-009` e
+  `ADR-010` permanecerem `Status: Proposed` foi resolvida no encerramento formal da SPR-009: os
+  três foram promovidos a `Status: Accepted`, junto do design doc `SPR-009-projects-domain.md`.)
 
 ## Technical Debt
 

@@ -336,14 +336,13 @@ O andamento da implementação está disponível em:
 **Release:** 0.2.0 (número de versão real ainda não atribuído às sprints abaixo — ver convenção
 de SemVer em `VISION.md`; nenhuma tag foi cortada desde a 0.2.0)
 
-**Sprint Atual:** SPR-009 — Bloco C implementado, aguardando aprovação arquitetural final.
-Blocos A e B já aprovados e mergeados; **a sprint ainda não foi encerrada** — ver
-`PROJECT_STATUS.md` para o histórico completo de sprints e o detalhamento por bloco.
+**Sprint Atual:** Nenhuma em andamento no momento. **SPR-009 concluída** ✅ (SPR-008 também
+concluída) — ver `PROJECT_STATUS.md` para o histórico completo de sprints e o detalhamento por
+bloco.
 
-Entregas do Bloco C, pendentes de aprovação:
+Principais entregas da SPR-009:
 
-- Primeiro agregado de negócio: `Project` (persistência e regras de negócio dos Blocos A/B, já
-  aprovados)
+- Primeiro agregado de negócio: `Project` (persistência e regras de negócio dos Blocos A/B)
 - API REST completa sob `/v1/projects`, com DTOs, Swagger e testes E2E
 
 Principais entregas da SPR-008:

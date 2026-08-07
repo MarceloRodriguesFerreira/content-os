@@ -31,19 +31,19 @@
 
 ## Sprint Atual
 
-**SPR-009 — Domínio: Projetos — 🟡 Bloco C entregue, aguardando aprovação final (sprint ainda
-não encerrada)**
+**SPR-009 — Domínio: Projetos — ✅ Concluída**
 Status:
 ✅ `ADR-008`, `ADR-009`, `ADR-010` e `SPR-009-projects-domain.md` — Design Freeze aprovado e mergeado
 ✅ Bloco A (Persistência) — aprovado e mergeado
 ✅ Bloco B (Regras de Negócio e Autorização) — aprovado e mergeado
-🟡 Bloco C (API REST) — implementado, lint/testes unitários/build/E2E verdes; aguardando revisão
-arquitetural e aprovação do Arquiteto-Chefe antes de encerrar a sprint
+✅ Bloco C (API REST) — aprovado e mergeado; lint, testes unitários, build e E2E verdes
 
-Pendência de governança registrada: `ADR-008`, `ADR-009` e `ADR-010` seguem com `Status:
-Proposed` nos respectivos arquivos, apesar dos três blocos já implementados sobre eles — os
-campos de status não foram promovidos a `Accepted`/`Implemented` durante a execução da sprint.
-Isso não bloqueia a conclusão técnica da SPR-009, mas é um item de governança em aberto.
+Governança das ADRs resolvida no encerramento: `ADR-008`, `ADR-009` e `ADR-010`, e o design doc
+`SPR-009-projects-domain.md`, foram promovidos de `Status: Proposed` para `Status: Accepted`,
+seguindo a convenção já em uso no repositório para toda decisão implementada e mergeada (mesmo
+padrão de `ADR-001`, `ADR-002`, `ADR-003`, `ADR-004`, `ADR-005`, `ADR-007` e dos três design docs
+de bloco da SPR-008). Procedimento de encerramento formalizado pela primeira vez em
+`engineering/runbooks/sprint-closure.md`.
 
 SPR-008 (Autorização RBAC e HTTP Pipeline) está ✅ **Concluída** — Blocos A, B e C aprovados e
 mergeados.
@@ -122,6 +122,7 @@ versionamento do Prisma Client gerado. Ver `engineering/tech-debt/` e
 | SPR-005 | Swagger / OpenAPI | ✅ |
 | SPR-006 | Design da Segurança + ADR-002 | ✅ |
 | SPR-007 | Camada de Autenticação JWT | ✅ |
+| SPR-009 | Domínio: Projetos (`Project`, API REST) | ✅ |
 
 ---
 
@@ -236,19 +237,22 @@ Planejado
 
 # Último Marco
 
-## ✅ SPR-007 concluída
+## ✅ SPR-009 — Domínio: Projetos concluída
 
 ### Principais entregas
 
-- AuthModule
-- UsersModule
-- JWT Authentication
-- Refresh Token Rotation
-- Reuse Detection
-- Global Guard
-- Swagger Bearer Authentication
-- Testes Unitários
-- Testes E2E
+- Primeiro agregado de negócio do Content-OS: `Project`
+- `ProjectsRepository` (Repository Pattern), `ProjectsService`, `ProjectOwnershipGuard`
+- DTOs de entrada/saída, `PaginatedResponseDto` genérico compartilhado (`ADR-010`)
+- `ProjectsController` sob `/v1/projects` (criação, listagem paginada/filtrada, detalhe,
+  atualização parcial, arquivamento e restauração)
+- Autorização por propriedade de recurso (`ADR-009`) — dono ou `ADMIN`/`SUPER_ADMIN`
+- Documentação Swagger completa (tag `Projects`)
+- Testes Unitários e End-to-End (fluxo completo, isolamento entre usuários, acesso
+  administrativo, paginação, validação, conflito de estado)
+
+Marco anterior: SPR-007 (Camada de Autenticação JWT) — ver `CHANGELOG.md` para o histórico
+completo de entregas por sprint.
 
 ---
 
@@ -278,30 +282,15 @@ Planejado
 
 # Próximo Marco
 
-## SPR-009 — Domínio: Projetos
+Nenhuma sprint em andamento no momento — SPR-009 foi concluída (ver "Último Marco" acima) e a
+próxima ainda não foi definida. Ver seção "Próxima Sprint" abaixo para as trilhas registradas no
+backlog.
 
-Ver `ADR-008`, `ADR-009`, `ADR-010`, `engineering/backlog/SPR-009.md` e
-`SPR-009-projects-domain.md`.
-
-- Bloco A: Persistência (`model Project`, `ProjectsRepository`) — ✅ aprovado e mergeado
-- Bloco B: Regras de negócio e autorização (`ProjectsService`, `ProjectOwnershipGuard`) — ✅
-  aprovado e mergeado
-- Bloco C: API REST (DTOs, `PaginatedResponseDto`, `ProjectsController`, `ProjectsModule`
-  registrado em `AppModule`, Swagger, testes E2E, documentação) — 🟡 implementado e validado
-  (lint, testes unitários, build e E2E verdes); aguardando revisão arquitetural e aprovação do
-  Arquiteto-Chefe, que encerra a sprint
-
-Explicitamente fora de escopo nesta sprint: Campanha, Conteúdo, Publicação, colaboração
-multi-usuário em projetos, transferência de propriedade, `DELETE` físico, painel administrativo
-de listagem global.
-
-Release prevista:
-
-Não atribuída antecipadamente (ver convenção adicionada em `VISION.md`, seção "Roadmap
-Estratégico" — nesta auditoria). SPR-008 (RBAC, HTTP Pipeline, Versionamento) ainda está em
-`[Unreleased]` no `CHANGELOG.md`, sem tag cortada. A versão real da SPR-009 será definida no
-momento em que uma release for de fato marcada, podendo agrupar SPR-008 e SPR-009 juntas ou não
-— decisão de release, não de roadmap.
+**Release:** não atribuída antecipadamente (ver convenção em `VISION.md`, seção "Roadmap
+Estratégico"). SPR-008 (RBAC, HTTP Pipeline, Versionamento) e SPR-009 (Domínio: Projetos) ambas
+seguem em `[Unreleased]` no `CHANGELOG.md`, sem tag cortada desde a `0.2.0`. A versão real será
+definida no momento em que uma release for de fato marcada, podendo agrupar as duas sprints em
+uma única release ou não — decisão de release, não de roadmap.
 
 ---
 
@@ -325,7 +314,7 @@ momento em que uma release for de fato marcada, podendo agrupar SPR-008 e SPR-00
 | Autorização (RBAC) | ✅ |
 | HTTP Pipeline (Validation/Exception/Response) | ✅ |
 | Versionamento de API | ✅ |
-| Domínio de Negócio (Projetos) | 🟡 Bloco C entregue, aguardando aprovação final |
+| Domínio de Negócio (Projetos) | ✅ |
 | CI/CD | ⬜ |
 
 ---
