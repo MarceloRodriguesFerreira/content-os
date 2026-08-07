@@ -31,12 +31,19 @@
 
 ## Sprint Atual
 
-**SPR-009 — Domínio: Projetos — 🟡 Design Freeze (aguardando aprovação do Arquiteto-Chefe)**
+**SPR-009 — Domínio: Projetos — 🟡 Bloco C entregue, aguardando aprovação final (sprint ainda
+não encerrada)**
 Status:
-🟡 `ADR-008`, `ADR-009`, `ADR-010` propostas; `SPR-009-projects-domain.md` entregue para revisão
-⬜ Bloco A (Persistência) — aguardando aprovação do Design Freeze
-⬜ Bloco B (Regras de Negócio e Autorização) — aguardando aprovação do Bloco A
-⬜ Bloco C (API REST) — aguardando aprovação do Bloco B
+✅ `ADR-008`, `ADR-009`, `ADR-010` e `SPR-009-projects-domain.md` — Design Freeze aprovado e mergeado
+✅ Bloco A (Persistência) — aprovado e mergeado
+✅ Bloco B (Regras de Negócio e Autorização) — aprovado e mergeado
+🟡 Bloco C (API REST) — implementado, lint/testes unitários/build/E2E verdes; aguardando revisão
+arquitetural e aprovação do Arquiteto-Chefe antes de encerrar a sprint
+
+Pendência de governança registrada: `ADR-008`, `ADR-009` e `ADR-010` seguem com `Status:
+Proposed` nos respectivos arquivos, apesar dos três blocos já implementados sobre eles — os
+campos de status não foram promovidos a `Accepted`/`Implemented` durante a execução da sprint.
+Isso não bloqueia a conclusão técnica da SPR-009, mas é um item de governança em aberto.
 
 SPR-008 (Autorização RBAC e HTTP Pipeline) está ✅ **Concluída** — Blocos A, B e C aprovados e
 mergeados.
@@ -47,7 +54,7 @@ versionamento do Prisma Client gerado. Ver `engineering/tech-debt/` e
 
 Última atualização:
 
-**04/08/2026**
+**07/08/2026**
 
 ---
 
@@ -273,12 +280,16 @@ Planejado
 
 ## SPR-009 — Domínio: Projetos
 
-Objetivos (Design Freeze proposto — ver `ADR-008`, `ADR-009`, `ADR-010`,
-`engineering/backlog/SPR-009.md`, aguardando aprovação)
+Ver `ADR-008`, `ADR-009`, `ADR-010`, `engineering/backlog/SPR-009.md` e
+`SPR-009-projects-domain.md`.
 
-- Bloco A: Persistência (`model Project`, `ProjectsRepository`) — ⬜ aguardando aprovação do Design Freeze
-- Bloco B: Regras de negócio e autorização (`ProjectsService`, `ProjectOwnershipGuard`) — ⬜ aguardando aprovação do Bloco A
-- Bloco C: API REST (`ProjectsController`, DTOs, Swagger, testes E2E) — ⬜ aguardando aprovação do Bloco B
+- Bloco A: Persistência (`model Project`, `ProjectsRepository`) — ✅ aprovado e mergeado
+- Bloco B: Regras de negócio e autorização (`ProjectsService`, `ProjectOwnershipGuard`) — ✅
+  aprovado e mergeado
+- Bloco C: API REST (DTOs, `PaginatedResponseDto`, `ProjectsController`, `ProjectsModule`
+  registrado em `AppModule`, Swagger, testes E2E, documentação) — 🟡 implementado e validado
+  (lint, testes unitários, build e E2E verdes); aguardando revisão arquitetural e aprovação do
+  Arquiteto-Chefe, que encerra a sprint
 
 Explicitamente fora de escopo nesta sprint: Campanha, Conteúdo, Publicação, colaboração
 multi-usuário em projetos, transferência de propriedade, `DELETE` físico, painel administrativo
@@ -314,7 +325,7 @@ momento em que uma release for de fato marcada, podendo agrupar SPR-008 e SPR-00
 | Autorização (RBAC) | ✅ |
 | HTTP Pipeline (Validation/Exception/Response) | ✅ |
 | Versionamento de API | ✅ |
-| Domínio de Negócio (Projetos) | 🟡 Design Freeze |
+| Domínio de Negócio (Projetos) | 🟡 Bloco C entregue, aguardando aprovação final |
 | CI/CD | ⬜ |
 
 ---

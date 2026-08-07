@@ -124,6 +124,30 @@ docs/
 
 ---
 
+## Autorização RBAC e HTTP Pipeline (SPR-008)
+
+- ✅ `enum Role` (`SUPER_ADMIN`, `ADMIN`, `USER`)
+- ✅ `@Roles()` decorator e `RolesGuard`
+- ✅ `ValidationPipe` global
+- ✅ `AllExceptionsFilter` e `TransformInterceptor` globais (envelope padrão de resposta)
+- ✅ Versionamento de API (`/v1`, URI Versioning)
+
+---
+
+## Domínio: Projetos (SPR-009)
+
+- ✅ Primeiro agregado de negócio da plataforma: `Project`
+- ✅ `ProjectsRepository` (Repository Pattern)
+- ✅ `ProjectsService` (criação, atualização parcial, arquivamento/restauração, listagem paginada)
+- ✅ `ProjectOwnershipGuard` — autorização por propriedade de recurso
+- ✅ DTOs de entrada/saída, `PaginatedResponseDto` genérico compartilhado
+- ✅ `ProjectsController` sob `/v1/projects`
+- ✅ Documentação Swagger completa (tag `Projects`)
+- ✅ Testes Unitários e End-to-End (fluxo completo, isolamento entre usuários, acesso
+  administrativo, paginação, validação, conflito de estado)
+
+---
+
 # Estrutura da API
 
 > A partir da SPR-008 (Bloco C), toda rota de negócio vive sob `/v1` (URI Versioning nativo do
@@ -153,6 +177,22 @@ POST /v1/auth/logout
 ```
 GET /v1/users/me
 ```
+
+---
+
+## Projetos
+
+```
+POST   /v1/projects
+GET    /v1/projects
+GET    /v1/projects/:id
+PATCH  /v1/projects/:id
+POST   /v1/projects/:id/archive
+POST   /v1/projects/:id/restore
+```
+
+Todas as rotas exigem autenticação. As rotas com `:id` exigem, além disso, ser o dono do
+projeto (ou `ADMIN`/`SUPER_ADMIN`) — `ProjectOwnershipGuard`, `ADR-009`.
 
 ---
 
@@ -293,26 +333,32 @@ O andamento da implementação está disponível em:
 
 # Status Atual
 
-**Release:** 0.2.0
+**Release:** 0.2.0 (número de versão real ainda não atribuído às sprints abaixo — ver convenção
+de SemVer em `VISION.md`; nenhuma tag foi cortada desde a 0.2.0)
 
-**Sprint Atual:** SPR-007 concluída ✅
+**Sprint Atual:** SPR-009 — Bloco C implementado, aguardando aprovação arquitetural final.
+Blocos A e B já aprovados e mergeados; **a sprint ainda não foi encerrada** — ver
+`PROJECT_STATUS.md` para o histórico completo de sprints e o detalhamento por bloco.
 
-Principais entregas:
+Entregas do Bloco C, pendentes de aprovação:
 
-- Camada completa de autenticação
-- JWT
-- Refresh Token
-- Swagger
-- Testes
-- Guard Global
-- Users Module
-- Auth Module
+- Primeiro agregado de negócio: `Project` (persistência e regras de negócio dos Blocos A/B, já
+  aprovados)
+- API REST completa sob `/v1/projects`, com DTOs, Swagger e testes E2E
+
+Principais entregas da SPR-008:
+
+- Autorização RBAC (`Role`, `@Roles()`, `RolesGuard`)
+- HTTP Pipeline padronizado (`ValidationPipe`, `AllExceptionsFilter`, `TransformInterceptor`)
+- Versionamento de API (`/v1`)
 
 ---
 
 # Próximas Etapas
 
-As próximas funcionalidades serão definidas na **SPR-008**, conforme priorização do roadmap do projeto.
+Ainda não definidas — ver "Próxima Sprint" em `PROJECT_STATUS.md` para as trilhas registradas
+no backlog (política de versionamento do Prisma Client gerado, endpoint de registro de
+usuários, pipeline de CI/CD).
 
 ---
 
