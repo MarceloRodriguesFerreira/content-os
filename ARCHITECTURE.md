@@ -131,7 +131,12 @@ Toda regra de negócio fica nos Services.
 
 Autenticação (quem é o usuário) e autorização (o que ele pode fazer) são camadas distintas:
 `JwtAuthGuard` é global (ADR-002); `RolesGuard` é aplicado apenas nas rotas que declaram
-`@Roles(...)` (ADR-004).
+`@Roles(...)` (ADR-004). Autorização por propriedade de recurso é um terceiro tipo, também não
+global: `ProjectOwnershipGuard` (ADR-009) é aplicado explicitamente via `@UseGuards(...)` apenas
+nas rotas de um módulo de domínio que operam sobre um recurso específico (`:id`), verificando se
+quem faz a requisição é o dono do recurso (ou tem papel administrativo) — não é um guard
+compartilhado entre módulos; cada agregado de domínio com essa necessidade declara o seu
+próprio, seguindo o mesmo YAGNI já registrado para DTOs de query por módulo (`ADR-010`).
 
 Validação de entrada e padronização de resposta são camadas de HTTP Pipeline, ortogonais às
 regras de negócio: `ValidationPipe` (ADR-003), `AllExceptionsFilter` e `TransformInterceptor`

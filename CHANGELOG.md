@@ -33,6 +33,39 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
   expressáveis via token de DI (como `app.enableVersioning()`)
 - Testes E2E cobrindo o versionamento: `/health` fora de `/v1`, `GET /` removida (404)
 
+- **Domínio: Projetos (SPR-009)** — primeiro agregado de negócio do Content-OS. Decisões
+  registradas em `ADR-008-project-aggregate-strategy.md`,
+  `ADR-009-resource-ownership-authorization.md` e `ADR-010-rest-api-conventions.md`.
+
+  - **Bloco A (Persistência):** `enum ProjectStatus` e `model Project` (`schema.prisma`),
+    relação inversa `projects Project[]` em `User`, migration, `ProjectsRepository`
+    (Repository Pattern — `findById`, `findManyByOwner` paginado/filtrado, `create`, `update`,
+    `updateStatus`), `@@index([ownerId])`. Testes unitários do Repository.
+  - **Bloco B (Regras de Negócio e Autorização):** `ProjectsService` (`create`, `update`,
+    `archive`, `restore`, `findById`, `list`) — `archive`/`restore` não-idempotentes (`409` em
+    transição para o mesmo estado); `update` exige ao menos um campo (`400`); tradução de
+    `status: 'ALL'`/omitido → filtro de listagem. `ProjectOwnershipGuard` (`ADR-009`) — dono ou
+    `ADMIN`/`SUPER_ADMIN` acessa; projeto inexistente → `404` (não `403`, contra enumeração).
+    Testes unitários de ambos.
+  - **Bloco C (API REST):** `CreateProjectDto`, `UpdateProjectDto`, `ListProjectsQueryDto`,
+    `ProjectResponseDto`; `PaginatedResponseDto<T>` genérico e compartilhado em `common/dto/`
+    (`ADR-010`) — documentado no Swagger via `@ApiExtraModels`/`getSchemaPath`, sem subclasse
+    concreta por módulo. `ProjectsController` sob `/v1/projects`:
+
+    ```
+    POST   /v1/projects
+    GET    /v1/projects
+    GET    /v1/projects/:id
+    PATCH  /v1/projects/:id
+    POST   /v1/projects/:id/archive
+    POST   /v1/projects/:id/restore
+    ```
+
+    `ProjectsModule` registrado em `AppModule`. Tag `Projects` no Swagger, com nota sobre o
+    envelope de paginação na descrição geral da API. Testes E2E cobrindo fluxo completo,
+    isolamento entre usuários (`ADR-009`), acesso administrativo, paginação, validação de
+    entrada e conflito de estado.
+
 ## Changed
 
 - **BREAKING (Bloco C):** todas as rotas de negócio migram para `/v1`: `/auth/login` →
@@ -59,6 +92,9 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
 
 - (Nenhuma nesta seção — a limitação anterior sobre confirmação E2E do claim `role` foi resolvida
   após o merge do Bloco A, com o Prisma Client regenerado de verdade.)
+- `ADR-008`, `ADR-009` e `ADR-010` permanecem com `Status: Proposed` nos respectivos arquivos,
+  apesar dos três blocos da SPR-009 já implementados sobre eles — pendência de governança
+  registrada, não bloqueante para a funcionalidade entregue.
 
 ## Technical Debt
 

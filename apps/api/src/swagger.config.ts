@@ -27,13 +27,22 @@ export function setupSwagger(app: INestApplication): void {
         '`data` é exatamente o schema documentado abaixo para cada rota — ' +
         'exceto respostas `204 No Content` (ex.: `POST /auth/logout`), que não ' +
         'têm corpo. Toda resposta de erro (4xx/5xx) vem como ' +
-        '`{ success: false, error: { statusCode, error, message }, path, timestamp }`.',
+        '`{ success: false, error: { statusCode, error, message }, path, timestamp }`.\n\n' +
+        '**Paginação (SPR-009, ADR-010):** toda listagem usa offset-based ' +
+        '(`page`/`limit`, ambos opcionais) e responde `data: { items, meta }`, ' +
+        'em que `meta` é `{ page, limit, total, totalPages }`. Filtros são ' +
+        'declarados por módulo via query params simples (ex.: ' +
+        '`GET /v1/projects?status=ARCHIVED`), sem linguagem de query genérica.',
     )
     .setVersion('1.0')
     .addTag('App', 'Endpoints gerais da aplicação')
     .addTag('Health', 'Verificação de disponibilidade da API')
     .addTag('Auth', 'Autenticação: login, refresh e logout')
     .addTag('Users', 'Dados do usuário autenticado')
+    .addTag(
+      'Projects',
+      'Gestão de projetos — agregado raiz do domínio de conteúdo (SPR-009)',
+    )
     .addBearerAuth({
       type: 'http',
       scheme: 'bearer',
