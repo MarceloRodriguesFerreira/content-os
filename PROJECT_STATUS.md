@@ -31,30 +31,25 @@
 
 ## Sprint Atual
 
-**SPR-009 — Domínio: Projetos — ✅ Concluída**
+**SPR-010 — Governança do Prisma Client + CI — 🟡 Bloco A implementado, aguardando aprovação
+(Bloco B ainda não iniciado)**
 Status:
-✅ `ADR-008`, `ADR-009`, `ADR-010` e `SPR-009-projects-domain.md` — Design Freeze aprovado e mergeado
-✅ Bloco A (Persistência) — aprovado e mergeado
-✅ Bloco B (Regras de Negócio e Autorização) — aprovado e mergeado
-✅ Bloco C (API REST) — aprovado e mergeado; lint, testes unitários, build e E2E verdes
+✅ `ADR-006` e `SPR-010-infra-tooling.md` — Design Freeze aprovado
+🟡 Bloco A (Governança e Preparação) — implementado; `ADR-006` com `Status: Proposed` (só é
+promovida a `Accepted` após aprovação formal, seguindo o mesmo fluxo de governança já usado nas
+demais ADRs); `TECH-001` com `Status: Em andamento` — decisão arquitetural formalizada na ADR,
+mas a resolução definitiva depende da ADR ser aprovada **e** do Bloco B (CI) ser implementado
+⬜ Bloco B (CI) — não iniciado; depende da aprovação e merge do Bloco A
 
-Governança das ADRs resolvida no encerramento: `ADR-008`, `ADR-009` e `ADR-010`, e o design doc
-`SPR-009-projects-domain.md`, foram promovidos de `Status: Proposed` para `Status: Accepted`,
-seguindo a convenção já em uso no repositório para toda decisão implementada e mergeada (mesmo
-padrão de `ADR-001`, `ADR-002`, `ADR-003`, `ADR-004`, `ADR-005`, `ADR-007` e dos três design docs
-de bloco da SPR-008). Procedimento de encerramento formalizado pela primeira vez em
-`engineering/runbooks/sprint-closure.md`.
+Esta sprint implementa apenas Continuous Integration — CD/deploy automático está explicitamente
+fora de escopo (ver `SPR-010-infra-tooling.md`). Nem CI nem CD estão implementados neste momento.
 
-SPR-008 (Autorização RBAC e HTTP Pipeline) está ✅ **Concluída** — Blocos A, B e C aprovados e
-mergeados.
-
-Dívida técnica registrada (fora de escopo desta e da sprint anterior, encaminhada): `TECH-001` —
-versionamento do Prisma Client gerado. Ver `engineering/tech-debt/` e
-`engineering/backlog/infra-backlog.md`.
+SPR-009 (Domínio: Projetos) segue ✅ **Concluída** — ver "Último Marco" abaixo para o histórico
+completo.
 
 Última atualização:
 
-**07/08/2026**
+**08/08/2026**
 
 ---
 
@@ -282,15 +277,14 @@ completo de entregas por sprint.
 
 # Próximo Marco
 
-Nenhuma sprint em andamento no momento — SPR-009 foi concluída (ver "Último Marco" acima) e a
-próxima ainda não foi definida. Ver seção "Próxima Sprint" abaixo para as trilhas registradas no
-backlog.
+SPR-010 (Governança do Prisma Client + CI) em andamento — Bloco A implementado, aguardando
+aprovação; Bloco B (CI) ainda não iniciado. Ver "Sprint Atual" acima.
 
 **Release:** não atribuída antecipadamente (ver convenção em `VISION.md`, seção "Roadmap
 Estratégico"). SPR-008 (RBAC, HTTP Pipeline, Versionamento) e SPR-009 (Domínio: Projetos) ambas
 seguem em `[Unreleased]` no `CHANGELOG.md`, sem tag cortada desde a `0.2.0`. A versão real será
-definida no momento em que uma release for de fato marcada, podendo agrupar as duas sprints em
-uma única release ou não — decisão de release, não de roadmap.
+definida no momento em que uma release for de fato marcada, podendo agrupar as sprints em uma
+única release ou não — decisão de release, não de roadmap.
 
 ---
 
@@ -321,24 +315,23 @@ uma única release ou não — decisão de release, não de roadmap.
 
 # Próxima Sprint
 
-Ainda não definida. Três trilhas permanecem registradas no backlog, deliberadamente fora da
-SPR-009 (decisão do Arquiteto-Chefe), cada uma pertencendo a uma frente distinta de evolução:
+SPR-011 (candidata: registro público de usuários) e SPR-012 (candidata: `Campaign`) ainda não têm
+Design Freeze — ver análise de planejamento correspondente. Duas trilhas permanecem registradas
+no backlog, deliberadamente fora do escopo da SPR-010 (decisão do Arquiteto-Chefe):
 
-- `TECH-001`/`ADR-006` — política de versionamento de artefatos gerados (infra, ver
-  `engineering/backlog/infra-backlog.md`)
 - Endpoint público de registro de usuários (domínio de autenticação, a ser retomado quando o
   fluxo de onboarding de usuários for iniciado)
-- Pipeline de CI/CD (DevOps/Plataforma, após consolidar a arquitetura funcional do produto)
+- Domínio `Campaign` (evolução do agregado `Project`, ver `VISION.md`)
 
 ---
 
 # Pendências Conhecidas (não bloqueantes)
 
 - Definir estratégia de registro de usuários — não tratado na SPR-008 nem na SPR-009; retomado
-  junto do fluxo de onboarding de usuários.
+  junto do fluxo de onboarding de usuários (candidata a SPR-011).
 - Modelo de Roles definido em `ADR-004` (papel único, sem Permissions/Claims — não é mais
   pendência de definição; Permissions/Claims permanecem fora de escopo até haver gatilho real,
   ver "Future Evolution" da `ADR-004`).
-- Estruturar pipeline de CI/CD.
-- `TECH-001`: revisar estratégia de versionamento do Prisma Client gerado (`apps/api/generated/`)
-  — adiado para sprint própria de infraestrutura, ver `engineering/backlog/infra-backlog.md`.
+- `TECH-001`: `Status: Em andamento` — decisão arquitetural formalizada em `ADR-006` (SPR-010,
+  Bloco A), mas a resolução definitiva ainda depende da aprovação da ADR (`Status: Proposed`
+  hoje) e da implementação do Bloco B (CI), que ainda não foi iniciado.

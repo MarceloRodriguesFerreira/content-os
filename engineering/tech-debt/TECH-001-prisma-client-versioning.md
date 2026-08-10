@@ -2,7 +2,9 @@
 
 ## Status
 
-Aberto
+Em andamento — decisão arquitetural formalizada em `ADR-006-generated-artifacts-versioning-
+policy.md` (`Status: Proposed`); resolução definitiva pendente da aprovação da ADR e da
+implementação do Bloco B (CI) da SPR-010
 
 ## Origem
 
@@ -48,3 +50,23 @@ versionado, e nenhuma migração de estratégia foi feita.
 
 Baixo a médio no curto prazo (nenhum incidente registrado); risco cresce a cada sprint que altera
 `schema.prisma` sem que a disciplina de regenerar/recommitar o client seja seguida à risca.
+
+## Resolução em Andamento (SPR-010, Bloco A)
+
+A decisão arquitetural foi formalizada em `ADR-006-generated-artifacts-versioning-policy.md`:
+`apps/api/generated/prisma/**` permanece versionado; a sincronização real de conteúdo com
+`schema.prisma` passará a ser verificada automaticamente via `prisma generate` +
+`git diff --exit-code`, substituindo a disciplina manual como mecanismo de garantia. As
+responsabilidades de desenvolvedor e de CI estão detalhadas na ADR.
+
+Esta dívida **ainda não está resolvida**. Faltam, nesta ordem:
+
+1. Aprovação formal da `ADR-006` (hoje `Status: Proposed`, segue o fluxo `Proposed → Design
+   Review → Design Freeze → Implementação → Validação → Accepted`, mesma convenção já usada nas
+   demais ADRs do repositório).
+2. Implementação do Bloco B da SPR-010 — o workflow de CI que efetivamente executa a verificação
+   de sincronização descrita na ADR. Até o Bloco B existir, a verificação automatizada não roda em
+   lugar nenhum; a disciplina de regenerar/recommitar continua manual, exatamente como antes.
+
+`TECH-001` só deve ser marcada `Resolvido` quando ambos os itens acima estiverem concluídos e
+mergeados em `main`.
