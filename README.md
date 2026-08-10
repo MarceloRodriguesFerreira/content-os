@@ -232,6 +232,23 @@ pnpm --filter api exec prisma generate
 
 ---
 
+## Alterando o Schema do Banco
+
+`apps/api/generated/prisma/**` é versionado no repositório (`ADR-006`). Sempre que
+`schema.prisma` for alterado, siga este fluxo antes de abrir o Pull Request:
+
+1. Alterar `schema.prisma`.
+2. Regenerar o client: `pnpm db:generate`.
+3. Validar a alteração localmente.
+4. Commitar `schema.prisma` **e** o diff resultante em `apps/api/generated/prisma/**` no mesmo
+   Pull Request — nunca separadamente.
+
+A CI verifica automaticamente se o client commitado está sincronizado com `schema.prisma`
+(`ADR-006`) — um PR que altera o schema sem regenerar/recommitar o client corretamente falha essa
+verificação.
+
+---
+
 ## Executar as migrations
 
 ```bash
