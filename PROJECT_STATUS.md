@@ -31,25 +31,31 @@
 
 ## Sprint Atual
 
-**SPR-010 — Governança do Prisma Client + CI — 🟡 Bloco A implementado, aguardando aprovação
-(Bloco B ainda não iniciado)**
+**SPR-010 — Governança do Prisma Client + CI — 🟡 Bloco B implementado, aguardando aprovação
+(sprint ainda não encerrada)**
 Status:
 ✅ `ADR-006` e `SPR-010-infra-tooling.md` — Design Freeze aprovado
-🟡 Bloco A (Governança e Preparação) — implementado; `ADR-006` com `Status: Proposed` (só é
-promovida a `Accepted` após aprovação formal, seguindo o mesmo fluxo de governança já usado nas
-demais ADRs); `TECH-001` com `Status: Em andamento` — decisão arquitetural formalizada na ADR,
-mas a resolução definitiva depende da ADR ser aprovada **e** do Bloco B (CI) ser implementado
-⬜ Bloco B (CI) — não iniciado; depende da aprovação e merge do Bloco A
+✅ Bloco A (Governança e Preparação) — aprovado e mergeado
+🟡 Bloco B (CI) — implementado (`.github/workflows/ci.yml`); lint, testes unitários, build,
+migrations e E2E validados localmente; mecanismo de sincronização do Prisma (`ADR-006`) validado
+nos cenários positivo e negativo; aguardando aprovação e merge
 
-Esta sprint implementa apenas Continuous Integration — CD/deploy automático está explicitamente
-fora de escopo (ver `SPR-010-infra-tooling.md`). Nem CI nem CD estão implementados neste momento.
+`ADR-006` segue com `Status: Proposed` — só é promovida a `Accepted` no encerramento formal da
+sprint (mesmo fluxo de governança já usado nas demais ADRs, não antecipado por bloco). `TECH-001`
+segue `Status: Em andamento` pelo mesmo motivo — a resolução definitiva ainda depende do merge do
+Bloco B em `main`.
+
+Esta sprint implementa apenas Continuous Integration — CD/deploy automático permanece
+explicitamente fora de escopo (ver `SPR-010-infra-tooling.md`). A CI produz um sinal
+verde/vermelho; o bloqueio efetivo de merge depende de branch protection, configuração posterior
+e manual do Arquiteto-Chefe no GitHub, fora do que este patch consegue implementar.
 
 SPR-009 (Domínio: Projetos) segue ✅ **Concluída** — ver "Último Marco" abaixo para o histórico
 completo.
 
 Última atualização:
 
-**08/08/2026**
+**10/08/2026**
 
 ---
 
@@ -101,7 +107,7 @@ completo.
 | Testes E2E | ✅ Operacional |
 | Build | ✅ Operacional |
 | Lint | ✅ Operacional |
-| CI/CD | ⬜ Planejado |
+| CI/CD | 🟡 CI implementado, aguardando aprovação (CD fora de escopo) |
 | Deploy | ⬜ Planejado |
 
 ---
@@ -309,7 +315,7 @@ definida no momento em que uma release for de fato marcada, podendo agrupar as s
 | HTTP Pipeline (Validation/Exception/Response) | ✅ |
 | Versionamento de API | ✅ |
 | Domínio de Negócio (Projetos) | ✅ |
-| CI/CD | ⬜ |
+| CI/CD | 🟡 CI implementado, aguardando aprovação (CD fora de escopo) |
 
 ---
 
