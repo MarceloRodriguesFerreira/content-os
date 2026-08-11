@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# Valores idênticos a docker/docker-compose.yml e apps/api/test/.env.test — não são
+# segredos de produção, apenas a topologia de Postgres já usada localmente (ADR-006 /
+# SPR-010-infra-tooling.md, seção "PostgreSQL no CI"). Nenhum GitHub Secret é necessário
+# para este pipeline.
+env:
+  DATABASE_URL: postgresql://content_os:content_os@localhost:5432/content_os
+
+jobs:
+  ci:
+    name: Lint, Test, Build, E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: content_os
+          POSTGRES_USER: content_os
+          POSTGRES_PASSWORD: content_os
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U content_os"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Versão resolvida automaticamente a partir do campo "packageManager"
+      # (pnpm@11.11.0) já pinado em package.json — não duplicamos o número de
+      # versão aqui, para não haver duas fontes de verdade divergentes.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ADR-006 — verifica sincronização REAL de conteúdo entre schema.prisma e
+      # apps/api/generated/prisma/**, não apenas existência de arquivo. Regenera de
+      # verdade, sobrescrevendo o que está commitado, e falha se houver qualquer
+      # diferença. Precisa ocorrer antes de lint/build/testes, que importam tipos
+      # do client gerado.
+      - name: Verify Prisma Client is in sync with schema.prisma (ADR-006)
+        run: |
+          pnpm --filter api exec prisma generate
+          git diff --exit-code -- apps/api/generated/prisma
+
+      - name: Lint
+        run: pnpm --filter api lint
+
+      - name: Unit tests
+        run: pnpm --filter api test
+
+      - name: Build
+        run: pnpm --filter api build
+
+      - name: Apply migrations
+        run: pnpm --filter api exec prisma migrate deploy
+
+      - name: E2E tests
+        run: pnpm --filter api test:e2e
