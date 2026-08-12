@@ -2,9 +2,8 @@
 
 ## Status
 
-Em andamento — decisão arquitetural formalizada em `ADR-006-generated-artifacts-versioning-
-policy.md` (`Status: Proposed`); resolução definitiva pendente da aprovação da ADR e da
-implementação do Bloco B (CI) da SPR-010
+Resolvido — ver `ADR-006-generated-artifacts-versioning-policy.md` (`Status: Accepted`) e o
+workflow `.github/workflows/ci.yml`, mergeado em `main` via PR #11
 
 ## Origem
 
@@ -51,22 +50,20 @@ versionado, e nenhuma migração de estratégia foi feita.
 Baixo a médio no curto prazo (nenhum incidente registrado); risco cresce a cada sprint que altera
 `schema.prisma` sem que a disciplina de regenerar/recommitar o client seja seguida à risca.
 
-## Resolução em Andamento (SPR-010, Bloco A)
+## Resolução (SPR-010)
 
-A decisão arquitetural foi formalizada em `ADR-006-generated-artifacts-versioning-policy.md`:
-`apps/api/generated/prisma/**` permanece versionado; a sincronização real de conteúdo com
-`schema.prisma` passará a ser verificada automaticamente via `prisma generate` +
+A decisão arquitetural foi formalizada em `ADR-006-generated-artifacts-versioning-policy.md`
+(`Status: Accepted`): `apps/api/generated/prisma/**` permanece versionado; a sincronização real
+de conteúdo com `schema.prisma` é verificada automaticamente via `prisma generate` +
 `git diff --exit-code`, substituindo a disciplina manual como mecanismo de garantia. As
 responsabilidades de desenvolvedor e de CI estão detalhadas na ADR.
 
-Esta dívida **ainda não está resolvida**. Faltam, nesta ordem:
+Os dois pré-requisitos registrados anteriormente nesta seção foram concluídos:
 
-1. Aprovação formal da `ADR-006` (hoje `Status: Proposed`, segue o fluxo `Proposed → Design
-   Review → Design Freeze → Implementação → Validação → Accepted`, mesma convenção já usada nas
-   demais ADRs do repositório).
-2. Implementação do Bloco B da SPR-010 — o workflow de CI que efetivamente executa a verificação
-   de sincronização descrita na ADR. Até o Bloco B existir, a verificação automatizada não roda em
-   lugar nenhum; a disciplina de regenerar/recommitar continua manual, exatamente como antes.
+1. **`ADR-006` aprovada** — `Status: Accepted` (Bloco A da SPR-010, aprovado e mergeado em
+   `main`).
+2. **Bloco B da SPR-010 implementado e mergeado em `main`** — `.github/workflows/ci.yml` (PR
+   #11, commit de merge `c41aaa8`), executando a verificação de sincronização descrita na ADR em
+   todo Pull Request contra `main` e em todo push para `main`.
 
-`TECH-001` só deve ser marcada `Resolvido` quando ambos os itens acima estiverem concluídos e
-mergeados em `main`.
+Esta dívida técnica está resolvida.

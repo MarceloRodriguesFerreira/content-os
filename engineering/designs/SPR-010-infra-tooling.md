@@ -1,6 +1,6 @@
 # SPR-010 — Governança do Prisma Client + CI (Design Doc)
 
-Status: Proposed
+Status: Accepted
 
 ## Objetivo
 

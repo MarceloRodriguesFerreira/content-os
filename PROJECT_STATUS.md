@@ -31,31 +31,30 @@
 
 ## Sprint Atual
 
-**SPR-010 — Governança do Prisma Client + CI — 🟡 Bloco B implementado, aguardando aprovação
-(sprint ainda não encerrada)**
+**SPR-010 — Governança do Prisma Client + CI — ✅ Concluída**
 Status:
-✅ `ADR-006` e `SPR-010-infra-tooling.md` — Design Freeze aprovado
-✅ Bloco A (Governança e Preparação) — aprovado e mergeado
-🟡 Bloco B (CI) — implementado (`.github/workflows/ci.yml`); lint, testes unitários, build,
-migrations e E2E validados localmente; mecanismo de sincronização do Prisma (`ADR-006`) validado
-nos cenários positivo e negativo; aguardando aprovação e merge
+✅ `ADR-006` e `SPR-010-infra-tooling.md` — Design Freeze aprovado e mergeado
+✅ Bloco A (Governança e Preparação) — aprovado e mergeado (PR #10, commit `4784867`)
+✅ Bloco B (CI) — aprovado e mergeado (PR #11, commit `c41aaa8`); `.github/workflows/ci.yml`
+executando lint, testes unitários, build, verificação de sincronização do Prisma Client
+(`ADR-006`), PostgreSQL real, migrations e E2E em todo Pull Request contra `main` e push para
+`main`
 
-`ADR-006` segue com `Status: Proposed` — só é promovida a `Accepted` no encerramento formal da
-sprint (mesmo fluxo de governança já usado nas demais ADRs, não antecipado por bloco). `TECH-001`
-segue `Status: Em andamento` pelo mesmo motivo — a resolução definitiva ainda depende do merge do
-Bloco B em `main`.
+Governança resolvida no encerramento: `ADR-006` e `SPR-010-infra-tooling.md` promovidos de
+`Status: Proposed` para `Status: Accepted`, seguindo a mesma convenção usada no encerramento da
+SPR-009. `TECH-001` promovida de `Em andamento` para `Resolvido`.
 
-Esta sprint implementa apenas Continuous Integration — CD/deploy automático permanece
-explicitamente fora de escopo (ver `SPR-010-infra-tooling.md`). A CI produz um sinal
-verde/vermelho; o bloqueio efetivo de merge depende de branch protection, configuração posterior
-e manual do Arquiteto-Chefe no GitHub, fora do que este patch consegue implementar.
+Esta sprint implementou apenas Continuous Integration — CD/deploy automático permanece
+explicitamente fora de escopo. A CI produz um sinal verde/vermelho; o bloqueio efetivo de merge
+via branch protection continua sendo configuração posterior e manual do Arquiteto-Chefe no
+GitHub, ainda não realizada.
 
 SPR-009 (Domínio: Projetos) segue ✅ **Concluída** — ver "Último Marco" abaixo para o histórico
 completo.
 
 Última atualização:
 
-**10/08/2026**
+**11/08/2026**
 
 ---
 
@@ -107,7 +106,7 @@ completo.
 | Testes E2E | ✅ Operacional |
 | Build | ✅ Operacional |
 | Lint | ✅ Operacional |
-| CI/CD | 🟡 CI implementado, aguardando aprovação (CD fora de escopo) |
+| CI/CD | ✅ CI operacional (GitHub Actions, PR + push em `main`); CD fora de escopo |
 | Deploy | ⬜ Planejado |
 
 ---
@@ -124,6 +123,7 @@ completo.
 | SPR-006 | Design da Segurança + ADR-002 | ✅ |
 | SPR-007 | Camada de Autenticação JWT | ✅ |
 | SPR-009 | Domínio: Projetos (`Project`, API REST) | ✅ |
+| SPR-010 | Governança do Prisma Client + CI | ✅ |
 
 ---
 
@@ -238,22 +238,23 @@ Planejado
 
 # Último Marco
 
-## ✅ SPR-009 — Domínio: Projetos concluída
+## ✅ SPR-010 — Governança do Prisma Client + CI concluída
 
 ### Principais entregas
 
-- Primeiro agregado de negócio do Content-OS: `Project`
-- `ProjectsRepository` (Repository Pattern), `ProjectsService`, `ProjectOwnershipGuard`
-- DTOs de entrada/saída, `PaginatedResponseDto` genérico compartilhado (`ADR-010`)
-- `ProjectsController` sob `/v1/projects` (criação, listagem paginada/filtrada, detalhe,
-  atualização parcial, arquivamento e restauração)
-- Autorização por propriedade de recurso (`ADR-009`) — dono ou `ADMIN`/`SUPER_ADMIN`
-- Documentação Swagger completa (tag `Projects`)
-- Testes Unitários e End-to-End (fluxo completo, isolamento entre usuários, acesso
-  administrativo, paginação, validação, conflito de estado)
+- `ADR-006 — Generated Artifacts Versioning Policy`: `apps/api/generated/prisma/**` permanece
+  versionado; sincronização real de conteúdo com `schema.prisma` verificada automaticamente
+- `.github/workflows/ci.yml` — GitHub Actions em todo Pull Request contra `main` e push para
+  `main`: lint, testes unitários, build, verificação de sincronização do Prisma Client,
+  PostgreSQL real, migrations, testes E2E
+- Mecanismo de verificação (`prisma generate` + `git diff --exit-code`) validado nos cenários
+  positivo e negativo
+- `TECH-001` formalmente resolvida
+- `engineering/runbooks/sprint-closure.md` aplicado pela segunda vez, consolidando o
+  procedimento de encerramento formal de sprint
 
-Marco anterior: SPR-007 (Camada de Autenticação JWT) — ver `CHANGELOG.md` para o histórico
-completo de entregas por sprint.
+Marco anterior: SPR-009 (Domínio: Projetos — `Project`, API REST) — ver `CHANGELOG.md` para o
+histórico completo de entregas por sprint.
 
 ---
 
@@ -283,14 +284,16 @@ completo de entregas por sprint.
 
 # Próximo Marco
 
-SPR-010 (Governança do Prisma Client + CI) em andamento — Bloco A implementado, aguardando
-aprovação; Bloco B (CI) ainda não iniciado. Ver "Sprint Atual" acima.
+Nenhuma sprint em andamento no momento — SPR-010 foi concluída (ver "Último Marco" acima) e a
+próxima ainda não foi definida. Ver seção "Próxima Sprint" abaixo para as trilhas registradas no
+backlog.
 
 **Release:** não atribuída antecipadamente (ver convenção em `VISION.md`, seção "Roadmap
-Estratégico"). SPR-008 (RBAC, HTTP Pipeline, Versionamento) e SPR-009 (Domínio: Projetos) ambas
-seguem em `[Unreleased]` no `CHANGELOG.md`, sem tag cortada desde a `0.2.0`. A versão real será
-definida no momento em que uma release for de fato marcada, podendo agrupar as sprints em uma
-única release ou não — decisão de release, não de roadmap.
+Estratégico"). SPR-008 (RBAC, HTTP Pipeline, Versionamento), SPR-009 (Domínio: Projetos) e
+SPR-010 (Governança do Prisma Client + CI) seguem em `[Unreleased]` no `CHANGELOG.md`, sem tag
+cortada desde a `0.2.0`. A versão real será definida no momento em que uma release for de fato
+marcada, podendo agrupar as sprints em uma única release ou não — decisão de release, não de
+roadmap.
 
 ---
 
@@ -315,7 +318,7 @@ definida no momento em que uma release for de fato marcada, podendo agrupar as s
 | HTTP Pipeline (Validation/Exception/Response) | ✅ |
 | Versionamento de API | ✅ |
 | Domínio de Negócio (Projetos) | ✅ |
-| CI/CD | 🟡 CI implementado, aguardando aprovação (CD fora de escopo) |
+| CI/CD | ✅ CI operacional (GitHub Actions, PR + push em `main`); CD fora de escopo |
 
 ---
 
@@ -338,6 +341,5 @@ no backlog, deliberadamente fora do escopo da SPR-010 (decisão do Arquiteto-Che
 - Modelo de Roles definido em `ADR-004` (papel único, sem Permissions/Claims — não é mais
   pendência de definição; Permissions/Claims permanecem fora de escopo até haver gatilho real,
   ver "Future Evolution" da `ADR-004`).
-- `TECH-001`: `Status: Em andamento` — decisão arquitetural formalizada em `ADR-006` (SPR-010,
-  Bloco A), mas a resolução definitiva ainda depende da aprovação da ADR (`Status: Proposed`
-  hoje) e da implementação do Bloco B (CI), que ainda não foi iniciado.
+- `TECH-001` não é mais pendência — resolvida via `ADR-006` e `.github/workflows/ci.yml`
+  (SPR-010).
