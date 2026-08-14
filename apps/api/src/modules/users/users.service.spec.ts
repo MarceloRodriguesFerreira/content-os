@@ -3,7 +3,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
 import { UsersRepository } from './repositories/users.repository';
-import { Role, User } from '../../../generated/prisma/client';
+import { Prisma, Role, User } from '../../../generated/prisma/client';
 
 jest.mock('bcrypt');
 
@@ -76,6 +76,79 @@ describe('UsersService', () => {
       ).rejects.toThrow(ConflictException);
 
       expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('normaliza o e-mail (trim + lowercase) antes de consultar e persistir', async () => {
+      repository.findByEmail.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+      repository.create.mockResolvedValue(fakeUser);
+
+      await service.create({
+        email: '  Ana@Example.com  ',
+        password: 'S3nhaForte!23',
+        name: 'Ana',
+      });
+
+      expect(repository.findByEmail).toHaveBeenCalledWith('ana@example.com');
+      expect(repository.create).toHaveBeenCalledWith({
+        email: 'ana@example.com',
+        password: 'hashed-password',
+        name: 'Ana',
+      });
+    });
+
+    it('lança ConflictException quando o repository rejeita com P2002 (condição de corrida)', async () => {
+      repository.findByEmail.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+
+      const p2002Error = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed on the fields: (`email`)',
+        { code: 'P2002', clientVersion: 'test' },
+      );
+      repository.create.mockRejectedValue(p2002Error);
+
+      await expect(
+        service.create({
+          email: 'ana@example.com',
+          password: 'S3nhaForte!23',
+          name: 'Ana',
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('propaga outros erros do repository sem modificação (não é P2002)', async () => {
+      repository.findByEmail.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+
+      const unexpectedError = new Error('conexão com o banco perdida');
+      repository.create.mockRejectedValue(unexpectedError);
+
+      await expect(
+        service.create({
+          email: 'ana@example.com',
+          password: 'S3nhaForte!23',
+          name: 'Ana',
+        }),
+      ).rejects.toThrow(unexpectedError);
+    });
+
+    it('continua aceitando um objeto literal simples { email, password, name } — regressão de contrato', async () => {
+      // Nenhum consumidor existente (auth.e2e-spec.ts, projects.e2e-spec.ts)
+      // instancia CreateUserDto/CreateUserInput — todos passam objetos
+      // literais, aceitos por tipagem estrutural. Este teste comprova que a
+      // troca de CreateUserDto para CreateUserInput (SPR-011, Bloco A) não
+      // quebra esse padrão.
+      repository.findByEmail.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+      repository.create.mockResolvedValue(fakeUser);
+
+      const plainObject = {
+        email: 'ana@example.com',
+        password: 'S3nhaForte!23',
+        name: 'Ana',
+      };
+
+      await expect(service.create(plainObject)).resolves.toEqual(fakeUser);
     });
   });
 
