@@ -6,6 +6,7 @@ import { UsersService } from '../users/users.service';
 import { AppConfigService } from '../../config/app-config.service';
 import { RefreshTokensRepository } from './repositories/refresh-tokens.repository';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { User } from '../../../generated/prisma/client';
@@ -41,6 +42,34 @@ export class AuthService {
     if (!passwordMatches) {
       throw new UnauthorizedException('Credenciais inválidas.');
     }
+
+    const { response } = await this.issueTokens(user);
+
+    return response;
+  }
+
+  /**
+   * Registra um novo usuário e já o autentica, emitindo o mesmo par de
+   * tokens que `login()` — evita o passo extra de "registrar, depois
+   * logar" (Design Freeze da SPR-011, seção "Autenticação após registro").
+   *
+   * `RegisterDto` nunca é repassado inteiro a `UsersService.create()` — o
+   * mapeamento é explícito, campo a campo, para `CreateUserInput`. Isso
+   * mantém `RegisterDto` (DTO HTTP, decorado com `@ApiProperty`/
+   * `class-validator`) estritamente do lado de `AuthController`, sem
+   * cruzar a fronteira de `UsersModule` (Design Freeze da SPR-011, seção
+   * "Contrato interno entre AuthService e UsersService").
+   *
+   * Normalização de e-mail, tratamento de e-mail duplicado (inclusive sob
+   * concorrência, via `P2002`) e política de senha são responsabilidade de
+   * `UsersService.create()` (Bloco A) — não duplicados aqui.
+   */
+  async register(dto: RegisterDto): Promise<AuthResponseDto> {
+    const user = await this.usersService.create({
+      email: dto.email,
+      password: dto.password,
+      name: dto.name,
+    });
 
     const { response } = await this.issueTokens(user);
 

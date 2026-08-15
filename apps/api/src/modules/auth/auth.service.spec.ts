@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
@@ -33,7 +33,11 @@ describe('AuthService', () => {
         AuthService,
         {
           provide: UsersService,
-          useValue: { findByEmail: jest.fn(), findByIdOrFail: jest.fn() },
+          useValue: {
+            findByEmail: jest.fn(),
+            findByIdOrFail: jest.fn(),
+            create: jest.fn(),
+          },
         },
         {
           provide: JwtService,
@@ -134,6 +138,100 @@ describe('AuthService', () => {
       await expect(
         service.login({ email: 'ana@example.com', password: 'errada' }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('register', () => {
+    const registerDto = {
+      name: 'Ana',
+      email: 'ana@example.com',
+      password: 'S3nhaForte!23',
+    };
+
+    it('registro válido: chama UsersService.create() uma única vez com exatamente { email, password, name }', async () => {
+      usersService.create.mockResolvedValue(fakeUser);
+      refreshTokensRepository.create.mockResolvedValue({
+        id: 'rt1',
+      } as never);
+
+      await service.register(registerDto);
+
+      expect(usersService.create).toHaveBeenCalledTimes(1);
+      expect(usersService.create).toHaveBeenCalledWith({
+        email: 'ana@example.com',
+        password: 'S3nhaForte!23',
+        name: 'Ana',
+      });
+    });
+
+    it('não repassa o RegisterDto inteiro — apenas o mapeamento explícito dos três campos', async () => {
+      usersService.create.mockResolvedValue(fakeUser);
+      refreshTokensRepository.create.mockResolvedValue({
+        id: 'rt1',
+      } as never);
+
+      // Objeto com um campo extra (ex.: role), do jeito que um DTO real
+      // nunca teria por causa do ValidationPipe — mas se register()
+      // repassasse `dto` inteiro em vez de mapear campo a campo, esse
+      // campo extra vazaria para UsersService.create(). Este teste garante
+      // que isso não acontece, independentemente do ValidationPipe (que
+      // não roda em teste unitário).
+      const dtoWithExtraField = { ...registerDto, role: 'ADMIN' };
+
+      await service.register(dtoWithExtraField as never);
+
+      const calledWith = usersService.create.mock.calls[0][0];
+      expect(calledWith).toEqual({
+        email: 'ana@example.com',
+        password: 'S3nhaForte!23',
+        name: 'Ana',
+      });
+      expect(calledWith).not.toHaveProperty('role');
+      expect(usersService.create).not.toHaveBeenCalledWith(
+        expect.objectContaining({ role: 'ADMIN' }),
+      );
+    });
+
+    it('usa issueTokens() para o usuário retornado por UsersService.create()', async () => {
+      const createdUser: User = { ...fakeUser, id: 'novo-usuario' };
+      usersService.create.mockResolvedValue(createdUser);
+      refreshTokensRepository.create.mockResolvedValue({
+        id: 'rt1',
+      } as never);
+
+      await service.register(registerDto);
+
+      expect(jwtService.signAsync).toHaveBeenCalledWith({
+        sub: 'novo-usuario',
+        email: createdUser.email,
+        role: createdUser.role,
+      });
+      expect(refreshTokensRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 'novo-usuario' }),
+      );
+    });
+
+    it('retorna o AuthResponseDto esperado (accessToken + refreshToken)', async () => {
+      usersService.create.mockResolvedValue(fakeUser);
+      refreshTokensRepository.create.mockResolvedValue({
+        id: 'rt1',
+      } as never);
+
+      const result = await service.register(registerDto);
+
+      expect(result.accessToken).toBe('signed-jwt');
+      expect(typeof result.refreshToken).toBe('string');
+      expect(result.refreshToken.length).toBeGreaterThan(0);
+    });
+
+    it('propaga o erro de UsersService.create() sem alteração (ex.: e-mail duplicado)', async () => {
+      const conflictError = new ConflictException('E-mail já cadastrado.');
+      usersService.create.mockRejectedValue(conflictError);
+
+      await expect(service.register(registerDto)).rejects.toThrow(
+        conflictError,
+      );
+      expect(refreshTokensRepository.create).not.toHaveBeenCalled();
     });
   });
 
