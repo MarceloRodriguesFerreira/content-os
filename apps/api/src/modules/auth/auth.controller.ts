@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { Public } from './decorators/public.decorator';
@@ -32,6 +33,22 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Credenciais inválidas.' })
   login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post('register')
+  @ApiOperation({
+    summary: 'Registra um novo usuário e emite access + refresh token',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Usuário registrado e autenticado.',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  @ApiResponse({ status: 409, description: 'E-mail já cadastrado.' })
+  register(@Body() dto: RegisterDto): Promise<AuthResponseDto> {
+    return this.authService.register(dto);
   }
 
   @Public()
