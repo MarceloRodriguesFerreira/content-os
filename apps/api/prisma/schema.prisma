@@ -53,8 +53,36 @@ model Project {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  campaigns   Campaign[]
+
   @@index([ownerId])
   @@map("projects")
+}
+
+/// Segundo agregado de negócio do domínio (ADR-011 / SPR-012, Bloco A).
+/// Agregado independente associado a `Project` (Project 1:N Campaign, via
+/// Campaign.projectId) — não é entidade interna do agregado Project.
+/// Ciclo de vida via `status`, não via DELETE físico, mesma justificativa
+/// de recuperabilidade da ADR-008. Sem ownerId próprio — a propriedade é
+/// derivada do Project associado (ver ADR-011, Ownership).
+enum CampaignStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  status      CampaignStatus @default(ACTIVE)
+  projectId   String
+  project     Project        @relation(fields: [projectId], references: [id])
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([projectId])
+  @@map("campaigns")
 }
 
 model RefreshToken {

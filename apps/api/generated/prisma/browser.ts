@@ -28,6 +28,11 @@ export type User = Prisma.UserModel
  */
 export type Project = Prisma.ProjectModel
 /**
+ * Model Campaign
+ * 
+ */
+export type Campaign = Prisma.CampaignModel
+/**
  * Model RefreshToken
  * 
  */
