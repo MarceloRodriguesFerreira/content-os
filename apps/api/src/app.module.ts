@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProjectsModule } from './modules/projects/projects.module';
+import { CampaignsModule } from './modules/campaigns/campaigns.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -19,6 +20,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     AuthModule,
     UsersModule,
     ProjectsModule,
+    CampaignsModule,
   ],
   controllers: [],
   providers: [

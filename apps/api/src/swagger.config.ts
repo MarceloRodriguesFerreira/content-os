@@ -43,6 +43,11 @@ export function setupSwagger(app: INestApplication): void {
       'Projects',
       'Gestão de projetos — agregado raiz do domínio de conteúdo (SPR-009)',
     )
+    .addTag(
+      'Campaigns',
+      'Gestão de campanhas — agregado filho de Project, propriedade ' +
+        'derivada via projectId → Project.ownerId (SPR-012, ADR-011)',
+    )
     .addBearerAuth({
       type: 'http',
       scheme: 'bearer',
