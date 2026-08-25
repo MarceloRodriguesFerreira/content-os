@@ -66,6 +66,44 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
     isolamento entre usuários (`ADR-009`), acesso administrativo, paginação, validação de
     entrada e conflito de estado.
 
+- **Domínio: Campaign (SPR-012)** — primeiro agregado filho de `Project`, sem `ownerId` próprio;
+  ownership derivada de `Campaign.projectId → Project.ownerId`. Decisão registrada em
+  `ADR-011-campaign-ownership-authorization.md`.
+
+  - **Bloco A (Persistência):** `enum CampaignStatus` (`ACTIVE`, `ARCHIVED`) e `model Campaign`
+    (`schema.prisma`), sem `@@unique([projectId, name])` e sem cascata de estado com `Project`,
+    migration, `CampaignsRepository` (Repository Pattern — `findById`, `findManyByProject`
+    paginado/filtrado, `create`, `update`, `updateStatus`), `@@index([projectId])`. Testes
+    unitários do Repository.
+  - **Bloco B (Regras de Negócio e Autorização):** `CampaignsService` (`create`, `update`,
+    `archive`, `findById`, `list`) — `archive` não-idempotente (`409` em transição para o mesmo
+    estado); sem operação de `restore` nesta sprint (`ARCHIVED` é terminal). `ADR-011` formaliza
+    três decisões: `CampaignOwnershipGuard` como guard específico do módulo, sem abstração
+    compartilhada com `ProjectOwnershipGuard` (YAGNI); falhas de ownership de `Campaign` retornam
+    sempre `404` — nunca `403` — em todos os cinco cenários de falha, incluindo recurso pai
+    inexistente e inconsistência entre `Campaign` e `:projectId` da rota (divergência consciente
+    e localizada em relação à `ADR-009`, que permanece integralmente válida para `Project`);
+    ordem de validação obrigatória em rotas com `:projectId` + `:id` (Campaign →
+    `campaign.projectId === params.projectId` → Project → ownership) contra IDOR. Testes
+    unitários de ambos.
+  - **Bloco C (API REST):** `CreateCampaignDto`, `UpdateCampaignDto`, `ListCampaignsQueryDto`,
+    `CampaignResponseDto`; `projectId` nunca é campo de body, sempre vem da rota.
+    `CampaignsController` sob `/v1/projects/:projectId/campaigns`:
+
+    ```
+    POST   /v1/projects/:projectId/campaigns
+    GET    /v1/projects/:projectId/campaigns
+    GET    /v1/projects/:projectId/campaigns/:id
+    PATCH  /v1/projects/:projectId/campaigns/:id
+    POST   /v1/projects/:projectId/campaigns/:id/archive
+    ```
+
+    `CampaignsModule` registrado em `AppModule`. `@UseGuards(CampaignOwnershipGuard)` declarado
+    explicitamente em toda rota. Swagger documentando os cinco cenários de `404` da `ADR-011`.
+    Testes E2E cobrindo fluxo completo, isolamento entre usuários, acesso administrativo,
+    proteção contra IDOR (campanha real referenciada com `:projectId` de outro projeto do mesmo
+    usuário), paginação, validação de entrada e conflito de estado no `archive`.
+
 ## Changed
 
 - **BREAKING (Bloco C):** todas as rotas de negócio migram para `/v1`: `/auth/login` →

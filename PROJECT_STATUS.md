@@ -31,30 +31,37 @@
 
 ## Sprint Atual
 
-**SPR-010 — Governança do Prisma Client + CI — ✅ Concluída**
+**SPR-012 — Domínio: Campaign — ✅ Concluída**
 Status:
-✅ `ADR-006` e `SPR-010-infra-tooling.md` — Design Freeze aprovado e mergeado
-✅ Bloco A (Governança e Preparação) — aprovado e mergeado (PR #10, commit `4784867`)
-✅ Bloco B (CI) — aprovado e mergeado (PR #11, commit `c41aaa8`); `.github/workflows/ci.yml`
-executando lint, testes unitários, build, verificação de sincronização do Prisma Client
-(`ADR-006`), PostgreSQL real, migrations e E2E em todo Pull Request contra `main` e push para
-`main`
+✅ `ADR-011-campaign-ownership-authorization.md` em `Status: Accepted`
+✅ Bloco A (Persistência) — aprovado e mergeado (PR #17, commit `c2eaf5f`)
+✅ Bloco B (Regras de Negócio e Autorização) — aprovado e mergeado (PR #18, commit `fb92c6b`)
+✅ Bloco C (API REST) — aprovado e mergeado (PR #19, commit `21d154a`)
 
-Governança resolvida no encerramento: `ADR-006` e `SPR-010-infra-tooling.md` promovidos de
-`Status: Proposed` para `Status: Accepted`, seguindo a mesma convenção usada no encerramento da
-SPR-009. `TECH-001` promovida de `Em andamento` para `Resolvido`.
+Diferente das SPR-008/009/010, esta sprint não possui um Design Document dedicado em
+`engineering/designs/SPR-012-*.md` — a decisão de arquitetura está registrada exclusivamente na
+`ADR-011`. Por isso, não se afirma aqui um "Design Freeze" formal no sentido pleno já usado nas
+sprints anteriores (ADR + Design Doc); o que está confirmado é: `ADR-011` em `Accepted`, e os
+três blocos (Persistência, Regras de Negócio e Autorização, API REST) aprovados e mergeados em
+`main`.
 
-Esta sprint implementou apenas Continuous Integration — CD/deploy automático permanece
-explicitamente fora de escopo. A CI produz um sinal verde/vermelho; o bloqueio efetivo de merge
-via branch protection continua sendo configuração posterior e manual do Arquiteto-Chefe no
-GitHub, ainda não realizada.
+Governança resolvida no encerramento: `ADR-011` segue em `Status: Accepted` (já promovida antes
+do encerramento formal). `engineering/backlog/SPR-012.md` criado retroativamente durante o
+encerramento, como registro documental de encerramento — não como Design Document.
 
-SPR-009 (Domínio: Projetos) segue ✅ **Concluída** — ver "Último Marco" abaixo para o histórico
-completo.
+`Campaign` é o primeiro agregado filho de `Project`: não possui `ownerId` próprio, com
+propriedade derivada de `Campaign.projectId → Project.ownerId`. `CampaignOwnershipGuard` é
+específico do módulo `campaigns` (sem abstração compartilhada com `ProjectOwnershipGuard` —
+decisão YAGNI registrada em `ADR-011`), e falhas de ownership de `Campaign` retornam sempre
+`404 Not Found` (divergência consciente e localizada em relação à `ADR-009`, que permanece
+integralmente válida para `Project`).
+
+SPR-010 (Governança do Prisma Client + CI) segue ✅ **Concluída** — ver "Último Marco" abaixo
+para o histórico completo.
 
 Última atualização:
 
-**11/08/2026**
+**24/08/2026**
 
 ---
 
@@ -124,6 +131,7 @@ completo.
 | SPR-007 | Camada de Autenticação JWT | ✅ |
 | SPR-009 | Domínio: Projetos (`Project`, API REST) | ✅ |
 | SPR-010 | Governança do Prisma Client + CI | ✅ |
+| SPR-012 | Domínio: Campaign (`Campaign`, API REST) | ✅ |
 
 ---
 
@@ -238,22 +246,22 @@ Planejado
 
 # Último Marco
 
-## ✅ SPR-010 — Governança do Prisma Client + CI concluída
+## ✅ SPR-012 — Domínio: Campaign concluída
 
 ### Principais entregas
 
-- `ADR-006 — Generated Artifacts Versioning Policy`: `apps/api/generated/prisma/**` permanece
-  versionado; sincronização real de conteúdo com `schema.prisma` verificada automaticamente
-- `.github/workflows/ci.yml` — GitHub Actions em todo Pull Request contra `main` e push para
-  `main`: lint, testes unitários, build, verificação de sincronização do Prisma Client,
-  PostgreSQL real, migrations, testes E2E
-- Mecanismo de verificação (`prisma generate` + `git diff --exit-code`) validado nos cenários
-  positivo e negativo
-- `TECH-001` formalmente resolvida
-- `engineering/runbooks/sprint-closure.md` aplicado pela segunda vez, consolidando o
-  procedimento de encerramento formal de sprint
+- `ADR-011-campaign-ownership-authorization.md`: primeiro agregado filho de `Project` sem
+  `ownerId` próprio — ownership derivada de `Campaign.projectId → Project.ownerId`
+- `CampaignsRepository`, `CampaignsService`, `CampaignOwnershipGuard`, `CampaignsController`
+  sob `/v1/projects/:projectId/campaigns` (Blocos A, B e C)
+- `CampaignOwnershipGuard` específico do módulo (YAGNI — sem abstração compartilhada com
+  `ProjectOwnershipGuard`); falhas de ownership retornam sempre `404 Not Found`, incluindo
+  proteção contra IDOR em rotas com `:projectId` + `:id` (divergência consciente e localizada em
+  relação à `ADR-009`, que permanece válida para `Project`)
+- `engineering/backlog/SPR-012.md` criado retroativamente durante o encerramento formal
+- `engineering/runbooks/sprint-closure.md` aplicado pela terceira vez
 
-Marco anterior: SPR-009 (Domínio: Projetos — `Project`, API REST) — ver `CHANGELOG.md` para o
+Marco anterior: SPR-010 (Governança do Prisma Client + CI) — ver `CHANGELOG.md` para o
 histórico completo de entregas por sprint.
 
 ---
@@ -284,16 +292,16 @@ histórico completo de entregas por sprint.
 
 # Próximo Marco
 
-Nenhuma sprint em andamento no momento — SPR-010 foi concluída (ver "Último Marco" acima) e a
+Nenhuma sprint em andamento no momento — SPR-012 foi concluída (ver "Último Marco" acima) e a
 próxima ainda não foi definida. Ver seção "Próxima Sprint" abaixo para as trilhas registradas no
 backlog.
 
 **Release:** não atribuída antecipadamente (ver convenção em `VISION.md`, seção "Roadmap
-Estratégico"). SPR-008 (RBAC, HTTP Pipeline, Versionamento), SPR-009 (Domínio: Projetos) e
-SPR-010 (Governança do Prisma Client + CI) seguem em `[Unreleased]` no `CHANGELOG.md`, sem tag
-cortada desde a `0.2.0`. A versão real será definida no momento em que uma release for de fato
-marcada, podendo agrupar as sprints em uma única release ou não — decisão de release, não de
-roadmap.
+Estratégico"). SPR-008 (RBAC, HTTP Pipeline, Versionamento), SPR-009 (Domínio: Projetos),
+SPR-010 (Governança do Prisma Client + CI) e SPR-012 (Domínio: Campaign) seguem em `[Unreleased]`
+no `CHANGELOG.md`, sem tag cortada desde a `0.2.0`. A versão real será definida no momento em que
+uma release for de fato marcada, podendo agrupar as sprints em uma única release ou não — decisão
+de release, não de roadmap.
 
 ---
 
@@ -318,19 +326,20 @@ roadmap.
 | HTTP Pipeline (Validation/Exception/Response) | ✅ |
 | Versionamento de API | ✅ |
 | Domínio de Negócio (Projetos) | ✅ |
+| Domínio de Negócio (Campaign) | ✅ |
 | CI/CD | ✅ CI operacional (GitHub Actions, PR + push em `main`); CD fora de escopo |
 
 ---
 
 # Próxima Sprint
 
-SPR-011 (candidata: registro público de usuários) e SPR-012 (candidata: `Campaign`) ainda não têm
-Design Freeze — ver análise de planejamento correspondente. Duas trilhas permanecem registradas
-no backlog, deliberadamente fora do escopo da SPR-010 (decisão do Arquiteto-Chefe):
+SPR-012 (Domínio: Campaign) foi concluída — ver "Último Marco" acima. A próxima sprint ainda não
+foi definida.
 
-- Endpoint público de registro de usuários (domínio de autenticação, a ser retomado quando o
-  fluxo de onboarding de usuários for iniciado)
-- Domínio `Campaign` (evolução do agregado `Project`, ver `VISION.md`)
+**Nota sobre SPR-011:** o endpoint público de registro de usuários já foi mergeado em `main`
+(commit `a12eaca`, PR #16) e não é mais uma trilha candidata em aberto. A regularização
+documental completa da SPR-011 (backlog dedicado, encerramento formal) está fora do escopo deste
+documento e será tratada separadamente.
 
 ---
 
