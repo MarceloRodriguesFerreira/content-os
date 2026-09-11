@@ -199,6 +199,7 @@ export type CampaignWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Campaign"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Campaign"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
+  contents?: Prisma.ContentListRelationFilter
 }
 
 export type CampaignOrderByWithRelationInput = {
@@ -210,6 +211,7 @@ export type CampaignOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   project?: Prisma.ProjectOrderByWithRelationInput
+  contents?: Prisma.ContentOrderByRelationAggregateInput
 }
 
 export type CampaignWhereUniqueInput = Prisma.AtLeast<{
@@ -224,6 +226,7 @@ export type CampaignWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Campaign"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Campaign"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
+  contents?: Prisma.ContentListRelationFilter
 }, "id">
 
 export type CampaignOrderByWithAggregationInput = {
@@ -260,6 +263,7 @@ export type CampaignCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutCampaignsInput
+  contents?: Prisma.ContentCreateNestedManyWithoutCampaignInput
 }
 
 export type CampaignUncheckedCreateInput = {
@@ -270,6 +274,7 @@ export type CampaignUncheckedCreateInput = {
   projectId: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  contents?: Prisma.ContentUncheckedCreateNestedManyWithoutCampaignInput
 }
 
 export type CampaignUpdateInput = {
@@ -280,6 +285,7 @@ export type CampaignUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutCampaignsNestedInput
+  contents?: Prisma.ContentUpdateManyWithoutCampaignNestedInput
 }
 
 export type CampaignUncheckedUpdateInput = {
@@ -290,6 +296,7 @@ export type CampaignUncheckedUpdateInput = {
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  contents?: Prisma.ContentUncheckedUpdateManyWithoutCampaignNestedInput
 }
 
 export type CampaignCreateManyInput = {
@@ -361,6 +368,11 @@ export type CampaignMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type CampaignScalarRelationFilter = {
+  is?: Prisma.CampaignWhereInput
+  isNot?: Prisma.CampaignWhereInput
+}
+
 export type CampaignCreateNestedManyWithoutProjectInput = {
   create?: Prisma.XOR<Prisma.CampaignCreateWithoutProjectInput, Prisma.CampaignUncheckedCreateWithoutProjectInput> | Prisma.CampaignCreateWithoutProjectInput[] | Prisma.CampaignUncheckedCreateWithoutProjectInput[]
   connectOrCreate?: Prisma.CampaignCreateOrConnectWithoutProjectInput | Prisma.CampaignCreateOrConnectWithoutProjectInput[]
@@ -407,6 +419,20 @@ export type EnumCampaignStatusFieldUpdateOperationsInput = {
   set?: $Enums.CampaignStatus
 }
 
+export type CampaignCreateNestedOneWithoutContentsInput = {
+  create?: Prisma.XOR<Prisma.CampaignCreateWithoutContentsInput, Prisma.CampaignUncheckedCreateWithoutContentsInput>
+  connectOrCreate?: Prisma.CampaignCreateOrConnectWithoutContentsInput
+  connect?: Prisma.CampaignWhereUniqueInput
+}
+
+export type CampaignUpdateOneRequiredWithoutContentsNestedInput = {
+  create?: Prisma.XOR<Prisma.CampaignCreateWithoutContentsInput, Prisma.CampaignUncheckedCreateWithoutContentsInput>
+  connectOrCreate?: Prisma.CampaignCreateOrConnectWithoutContentsInput
+  upsert?: Prisma.CampaignUpsertWithoutContentsInput
+  connect?: Prisma.CampaignWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CampaignUpdateToOneWithWhereWithoutContentsInput, Prisma.CampaignUpdateWithoutContentsInput>, Prisma.CampaignUncheckedUpdateWithoutContentsInput>
+}
+
 export type CampaignCreateWithoutProjectInput = {
   id?: string
   name: string
@@ -414,6 +440,7 @@ export type CampaignCreateWithoutProjectInput = {
   status?: $Enums.CampaignStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  contents?: Prisma.ContentCreateNestedManyWithoutCampaignInput
 }
 
 export type CampaignUncheckedCreateWithoutProjectInput = {
@@ -423,6 +450,7 @@ export type CampaignUncheckedCreateWithoutProjectInput = {
   status?: $Enums.CampaignStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  contents?: Prisma.ContentUncheckedCreateNestedManyWithoutCampaignInput
 }
 
 export type CampaignCreateOrConnectWithoutProjectInput = {
@@ -464,6 +492,62 @@ export type CampaignScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Campaign"> | Date | string
 }
 
+export type CampaignCreateWithoutContentsInput = {
+  id?: string
+  name: string
+  description?: string | null
+  status?: $Enums.CampaignStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  project: Prisma.ProjectCreateNestedOneWithoutCampaignsInput
+}
+
+export type CampaignUncheckedCreateWithoutContentsInput = {
+  id?: string
+  name: string
+  description?: string | null
+  status?: $Enums.CampaignStatus
+  projectId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type CampaignCreateOrConnectWithoutContentsInput = {
+  where: Prisma.CampaignWhereUniqueInput
+  create: Prisma.XOR<Prisma.CampaignCreateWithoutContentsInput, Prisma.CampaignUncheckedCreateWithoutContentsInput>
+}
+
+export type CampaignUpsertWithoutContentsInput = {
+  update: Prisma.XOR<Prisma.CampaignUpdateWithoutContentsInput, Prisma.CampaignUncheckedUpdateWithoutContentsInput>
+  create: Prisma.XOR<Prisma.CampaignCreateWithoutContentsInput, Prisma.CampaignUncheckedCreateWithoutContentsInput>
+  where?: Prisma.CampaignWhereInput
+}
+
+export type CampaignUpdateToOneWithWhereWithoutContentsInput = {
+  where?: Prisma.CampaignWhereInput
+  data: Prisma.XOR<Prisma.CampaignUpdateWithoutContentsInput, Prisma.CampaignUncheckedUpdateWithoutContentsInput>
+}
+
+export type CampaignUpdateWithoutContentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumCampaignStatusFieldUpdateOperationsInput | $Enums.CampaignStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  project?: Prisma.ProjectUpdateOneRequiredWithoutCampaignsNestedInput
+}
+
+export type CampaignUncheckedUpdateWithoutContentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumCampaignStatusFieldUpdateOperationsInput | $Enums.CampaignStatus
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type CampaignCreateManyProjectInput = {
   id?: string
   name: string
@@ -480,6 +564,7 @@ export type CampaignUpdateWithoutProjectInput = {
   status?: Prisma.EnumCampaignStatusFieldUpdateOperationsInput | $Enums.CampaignStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  contents?: Prisma.ContentUpdateManyWithoutCampaignNestedInput
 }
 
 export type CampaignUncheckedUpdateWithoutProjectInput = {
@@ -489,6 +574,7 @@ export type CampaignUncheckedUpdateWithoutProjectInput = {
   status?: Prisma.EnumCampaignStatusFieldUpdateOperationsInput | $Enums.CampaignStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  contents?: Prisma.ContentUncheckedUpdateManyWithoutCampaignNestedInput
 }
 
 export type CampaignUncheckedUpdateManyWithoutProjectInput = {
@@ -501,6 +587,35 @@ export type CampaignUncheckedUpdateManyWithoutProjectInput = {
 }
 
 
+/**
+ * Count Type CampaignCountOutputType
+ */
+
+export type CampaignCountOutputType = {
+  contents: number
+}
+
+export type CampaignCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  contents?: boolean | CampaignCountOutputTypeCountContentsArgs
+}
+
+/**
+ * CampaignCountOutputType without action
+ */
+export type CampaignCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CampaignCountOutputType
+   */
+  select?: Prisma.CampaignCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * CampaignCountOutputType without action
+ */
+export type CampaignCountOutputTypeCountContentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ContentWhereInput
+}
+
 
 export type CampaignSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -511,6 +626,8 @@ export type CampaignSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   createdAt?: boolean
   updatedAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  contents?: boolean | Prisma.Campaign$contentsArgs<ExtArgs>
+  _count?: boolean | Prisma.CampaignCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["campaign"]>
 
 export type CampaignSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -548,6 +665,8 @@ export type CampaignSelectScalar = {
 export type CampaignOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "description" | "status" | "projectId" | "createdAt" | "updatedAt", ExtArgs["result"]["campaign"]>
 export type CampaignInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  contents?: boolean | Prisma.Campaign$contentsArgs<ExtArgs>
+  _count?: boolean | Prisma.CampaignCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type CampaignIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
@@ -560,6 +679,7 @@ export type $CampaignPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   name: "Campaign"
   objects: {
     project: Prisma.$ProjectPayload<ExtArgs>
+    contents: Prisma.$ContentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -964,6 +1084,7 @@ readonly fields: CampaignFieldRefs;
 export interface Prisma__CampaignClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   project<T extends Prisma.ProjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProjectDefaultArgs<ExtArgs>>): Prisma.Prisma__ProjectClient<runtime.Types.Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  contents<T extends Prisma.Campaign$contentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Campaign$contentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ContentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1398,6 +1519,30 @@ export type CampaignDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many Campaigns to delete.
    */
   limit?: number
+}
+
+/**
+ * Campaign.contents
+ */
+export type Campaign$contentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Content
+   */
+  select?: Prisma.ContentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Content
+   */
+  omit?: Prisma.ContentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ContentInclude<ExtArgs> | null
+  where?: Prisma.ContentWhereInput
+  orderBy?: Prisma.ContentOrderByWithRelationInput | Prisma.ContentOrderByWithRelationInput[]
+  cursor?: Prisma.ContentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ContentScalarFieldEnum | Prisma.ContentScalarFieldEnum[]
 }
 
 /**

@@ -32,3 +32,11 @@ export const CampaignStatus = {
 } as const
 
 export type CampaignStatus = (typeof CampaignStatus)[keyof typeof CampaignStatus]
+
+
+export const ContentStatus = {
+  ACTIVE: 'ACTIVE',
+  ARCHIVED: 'ARCHIVED'
+} as const
+
+export type ContentStatus = (typeof ContentStatus)[keyof typeof ContentStatus]

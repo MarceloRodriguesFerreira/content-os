@@ -54,6 +54,7 @@ export const ModelName = {
   User: 'User',
   Project: 'Project',
   Campaign: 'Campaign',
+  Content: 'Content',
   RefreshToken: 'RefreshToken'
 } as const
 
@@ -111,6 +112,19 @@ export const CampaignScalarFieldEnum = {
 } as const
 
 export type CampaignScalarFieldEnum = (typeof CampaignScalarFieldEnum)[keyof typeof CampaignScalarFieldEnum]
+
+
+export const ContentScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  body: 'body',
+  status: 'status',
+  campaignId: 'campaignId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ContentScalarFieldEnum = (typeof ContentScalarFieldEnum)[keyof typeof ContentScalarFieldEnum]
 
 
 export const RefreshTokenScalarFieldEnum = {

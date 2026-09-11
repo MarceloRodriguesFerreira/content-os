@@ -55,6 +55,11 @@ export type Project = Prisma.ProjectModel
  */
 export type Campaign = Prisma.CampaignModel
 /**
+ * Model Content
+ * 
+ */
+export type Content = Prisma.ContentModel
+/**
  * Model RefreshToken
  * 
  */
