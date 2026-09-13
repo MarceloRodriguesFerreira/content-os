@@ -81,8 +81,38 @@ model Campaign {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
+  contents    Content[]
+
   @@index([projectId])
   @@map("campaigns")
+}
+
+/// Terceiro agregado de negócio do domínio (ADR-012 / SPR-013, Bloco A).
+/// Agregado independente associado a `Campaign` (Campaign 1:N Content, via
+/// Content.campaignId) — não é entidade interna do agregado Campaign.
+/// Ciclo de vida via `status`, não via DELETE físico, mesma justificativa
+/// de recuperabilidade da ADR-008. Sem ownerId próprio — a propriedade é
+/// derivada por Content.campaignId -> Campaign.projectId -> Project.ownerId
+/// (ver ADR-012, Ownership). `ARCHIVED` é terminal nesta sprint (sem
+/// restore) — ver ADR-012 e SPR-013-content-domain.md.
+enum ContentStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Content {
+  id         String        @id @default(cuid())
+  name       String
+  body       String?
+  status     ContentStatus @default(ACTIVE)
+  campaignId String
+  campaign   Campaign      @relation(fields: [campaignId], references: [id])
+
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([campaignId])
+  @@map("contents")
 }
 
 model RefreshToken {
