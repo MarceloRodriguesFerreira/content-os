@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { CampaignsModule } from './modules/campaigns/campaigns.module';
+import { ContentModule } from './modules/content/content.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -21,6 +22,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     UsersModule,
     ProjectsModule,
     CampaignsModule,
+    ContentModule,
   ],
   controllers: [],
   providers: [
