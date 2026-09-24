@@ -31,37 +31,40 @@
 
 ## Sprint Atual
 
-**SPR-012 — Domínio: Campaign — ✅ Concluída**
+**SPR-013 — Domínio: Content — ✅ Concluída**
 Status:
-✅ `ADR-011-campaign-ownership-authorization.md` em `Status: Accepted`
-✅ Bloco A (Persistência) — aprovado e mergeado (PR #17, commit `c2eaf5f`)
-✅ Bloco B (Regras de Negócio e Autorização) — aprovado e mergeado (PR #18, commit `fb92c6b`)
-✅ Bloco C (API REST) — aprovado e mergeado (PR #19, commit `21d154a`)
+✅ `ADR-012-content-ownership-authorization.md` em `Status: Accepted`
+✅ `engineering/designs/SPR-013-content-domain.md` em `Status: Accepted`
+✅ Bloco A (Persistência) — aprovado e mergeado (PR #22, commit `8df7f44`)
+✅ Bloco B (Regras de Negócio e Autorização) — aprovado e mergeado (PR #24, commit `2a85565`)
+✅ Bloco C (API REST) — aprovado e mergeado (PR #25, commit de correção `6028834`, merge
+`419a8a5`)
 
-Diferente das SPR-008/009/010, esta sprint não possui um Design Document dedicado em
-`engineering/designs/SPR-012-*.md` — a decisão de arquitetura está registrada exclusivamente na
-`ADR-011`. Por isso, não se afirma aqui um "Design Freeze" formal no sentido pleno já usado nas
-sprints anteriores (ADR + Design Doc); o que está confirmado é: `ADR-011` em `Accepted`, e os
-três blocos (Persistência, Regras de Negócio e Autorização, API REST) aprovados e mergeados em
-`main`.
+Diferente da SPR-012, esta sprint possui um Design Document dedicado
+(`engineering/designs/SPR-013-content-domain.md`), seguindo o mesmo padrão pleno de "Design
+Freeze" (ADR + Design Doc) já usado nas SPR-008/009/010. Ambos os documentos estão em
+`Status: Accepted`, e os três blocos (Persistência, Regras de Negócio e Autorização, API REST)
+foram aprovados e mergeados em `main`.
 
-Governança resolvida no encerramento: `ADR-011` segue em `Status: Accepted` (já promovida antes
-do encerramento formal). `engineering/backlog/SPR-012.md` criado retroativamente durante o
-encerramento, como registro documental de encerramento — não como Design Document.
+Governança resolvida no encerramento: `ADR-012` e o Design Doc seguem em `Status: Accepted` (já
+promovidos antes do encerramento formal, na PR #23). `engineering/backlog/SPR-013.md` atualizado
+durante o encerramento, registrando os três blocos como concluídos.
 
-`Campaign` é o primeiro agregado filho de `Project`: não possui `ownerId` próprio, com
-propriedade derivada de `Campaign.projectId → Project.ownerId`. `CampaignOwnershipGuard` é
-específico do módulo `campaigns` (sem abstração compartilhada com `ProjectOwnershipGuard` —
-decisão YAGNI registrada em `ADR-011`), e falhas de ownership de `Campaign` retornam sempre
-`404 Not Found` (divergência consciente e localizada em relação à `ADR-009`, que permanece
-integralmente válida para `Project`).
+`Content` é o primeiro agregado filho de `Campaign` — e o primeiro recurso de terceiro nível do
+Content-OS (neto de `Project`): não possui `ownerId` próprio, com propriedade derivada de
+`Content.campaignId → Campaign.projectId → Project.ownerId`. `ContentOwnershipGuard` é
+específico do módulo `content` (sem abstração compartilhada com
+`ProjectOwnershipGuard`/`CampaignOwnershipGuard` — decisão YAGNI registrada em `ADR-012`), cobre
+explicitamente os dois contextos de rota (com `:id` e sem `:id`, em `create`/`list`), e falhas de
+ownership retornam sempre `404 Not Found` (divergência consciente e localizada em relação à
+`ADR-009`, já aplicada por `CampaignOwnershipGuard` via `ADR-011`).
 
-SPR-010 (Governança do Prisma Client + CI) segue ✅ **Concluída** — ver "Último Marco" abaixo
-para o histórico completo.
+SPR-012 (Domínio: Campaign) segue ✅ **Concluída** — ver "Sprints Concluídas" e "Último Marco"
+abaixo para o histórico completo.
 
 Última atualização:
 
-**24/08/2026**
+**23/09/2026**
 
 ---
 
@@ -132,6 +135,7 @@ para o histórico completo.
 | SPR-009 | Domínio: Projetos (`Project`, API REST) | ✅ |
 | SPR-010 | Governança do Prisma Client + CI | ✅ |
 | SPR-012 | Domínio: Campaign (`Campaign`, API REST) | ✅ |
+| SPR-013 | Domínio: Content (`Content`, API REST) | ✅ |
 
 ---
 
@@ -246,23 +250,27 @@ Planejado
 
 # Último Marco
 
-## ✅ SPR-012 — Domínio: Campaign concluída
+## ✅ SPR-013 — Domínio: Content concluída
 
 ### Principais entregas
 
-- `ADR-011-campaign-ownership-authorization.md`: primeiro agregado filho de `Project` sem
-  `ownerId` próprio — ownership derivada de `Campaign.projectId → Project.ownerId`
-- `CampaignsRepository`, `CampaignsService`, `CampaignOwnershipGuard`, `CampaignsController`
-  sob `/v1/projects/:projectId/campaigns` (Blocos A, B e C)
-- `CampaignOwnershipGuard` específico do módulo (YAGNI — sem abstração compartilhada com
-  `ProjectOwnershipGuard`); falhas de ownership retornam sempre `404 Not Found`, incluindo
-  proteção contra IDOR em rotas com `:projectId` + `:id` (divergência consciente e localizada em
-  relação à `ADR-009`, que permanece válida para `Project`)
-- `engineering/backlog/SPR-012.md` criado retroativamente durante o encerramento formal
-- `engineering/runbooks/sprint-closure.md` aplicado pela terceira vez
+- `ADR-012-content-ownership-authorization.md` e `engineering/designs/SPR-013-content-domain.md`:
+  primeiro agregado de terceiro nível (neto de `Project`, filho de `Campaign`) sem `ownerId`
+  próprio — ownership derivada de `Content.campaignId → Campaign.projectId → Project.ownerId`
+- `ContentsRepository`, `ContentsService`, `ContentOwnershipGuard`, `ContentsController` sob
+  `/v1/campaigns/:campaignId/contents` (Blocos A, B e C)
+- `ContentOwnershipGuard` específico do módulo (YAGNI — sem abstração compartilhada com
+  `ProjectOwnershipGuard`/`CampaignOwnershipGuard`); cobre explicitamente os dois contextos de
+  rota (com `:id`, e sem `:id` em `create`/`list`, auditado e confirmado no encerramento do
+  Bloco C); falhas de ownership retornam sempre `404 Not Found`, incluindo proteção contra IDOR
+  em rotas com `:campaignId` + `:id` — tanto entre usuários diferentes quanto com `:campaignId`
+  de outra campanha do próprio usuário (divergência consciente e localizada em relação à
+  `ADR-009`, que permanece válida para `Project`)
+- `engineering/backlog/SPR-013.md` atualizado durante o encerramento formal
+- `engineering/runbooks/sprint-closure.md` aplicado pela quarta vez
 
-Marco anterior: SPR-010 (Governança do Prisma Client + CI) — ver `CHANGELOG.md` para o
-histórico completo de entregas por sprint.
+Marco anterior: SPR-012 (Domínio: Campaign) — ver `CHANGELOG.md` para o histórico completo de
+entregas por sprint.
 
 ---
 
@@ -292,16 +300,16 @@ histórico completo de entregas por sprint.
 
 # Próximo Marco
 
-Nenhuma sprint em andamento no momento — SPR-012 foi concluída (ver "Último Marco" acima) e a
+Nenhuma sprint em andamento no momento — SPR-013 foi concluída (ver "Último Marco" acima) e a
 próxima ainda não foi definida. Ver seção "Próxima Sprint" abaixo para as trilhas registradas no
 backlog.
 
 **Release:** não atribuída antecipadamente (ver convenção em `VISION.md`, seção "Roadmap
 Estratégico"). SPR-008 (RBAC, HTTP Pipeline, Versionamento), SPR-009 (Domínio: Projetos),
-SPR-010 (Governança do Prisma Client + CI) e SPR-012 (Domínio: Campaign) seguem em `[Unreleased]`
-no `CHANGELOG.md`, sem tag cortada desde a `0.2.0`. A versão real será definida no momento em que
-uma release for de fato marcada, podendo agrupar as sprints em uma única release ou não — decisão
-de release, não de roadmap.
+SPR-010 (Governança do Prisma Client + CI), SPR-012 (Domínio: Campaign) e SPR-013 (Domínio:
+Content) seguem em `[Unreleased]` no `CHANGELOG.md`, sem tag cortada desde a `0.2.0`. A versão
+real será definida no momento em que uma release for de fato marcada, podendo agrupar as sprints
+em uma única release ou não — decisão de release, não de roadmap.
 
 ---
 
@@ -327,13 +335,14 @@ de release, não de roadmap.
 | Versionamento de API | ✅ |
 | Domínio de Negócio (Projetos) | ✅ |
 | Domínio de Negócio (Campaign) | ✅ |
+| Domínio de Negócio (Content) | ✅ |
 | CI/CD | ✅ CI operacional (GitHub Actions, PR + push em `main`); CD fora de escopo |
 
 ---
 
 # Próxima Sprint
 
-SPR-012 (Domínio: Campaign) foi concluída — ver "Último Marco" acima. A próxima sprint ainda não
+SPR-013 (Domínio: Content) foi concluída — ver "Último Marco" acima. A próxima sprint ainda não
 foi definida.
 
 **Nota sobre SPR-011:** o endpoint público de registro de usuários já foi mergeado em `main`

@@ -104,6 +104,47 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
     proteção contra IDOR (campanha real referenciada com `:projectId` de outro projeto do mesmo
     usuário), paginação, validação de entrada e conflito de estado no `archive`.
 
+- **Domínio: Content (SPR-013)** — primeiro agregado filho de `Campaign`, e primeiro recurso de
+  terceiro nível do Content-OS (neto de `Project`), sem `ownerId` próprio; ownership derivada de
+  `Content.campaignId → Campaign.projectId → Project.ownerId`. Decisões registradas em
+  `ADR-012-content-ownership-authorization.md` e `engineering/designs/SPR-013-content-domain.md`.
+
+  - **Bloco A (Persistência):** `enum ContentStatus` (`ACTIVE`, `ARCHIVED`) e `model Content`
+    (`schema.prisma`), sem `@@unique([campaignId, name])` e sem cascata de estado com
+    `Campaign`, migration, `ContentsRepository` (Repository Pattern — `findById`,
+    `findManyByCampaign` paginado/filtrado, `create`, `update`, `updateStatus`),
+    `@@index([campaignId])`. Testes unitários do Repository.
+  - **Bloco B (Regras de Negócio e Autorização):** `ContentsService` (`create`, `update`,
+    `archive`, `findById`, `list`) — `archive` não-idempotente (`409` em transição para o mesmo
+    estado); sem operação de `restore` nesta sprint (`ARCHIVED` é terminal). `ADR-012` formaliza:
+    `ContentOwnershipGuard` como guard específico do módulo, sem abstração compartilhada com
+    `ProjectOwnershipGuard`/`CampaignOwnershipGuard` (YAGNI); falhas de ownership de `Content`
+    retornam sempre `404` — nunca `403`; cadeia de ownership resolvida sempre via
+    `campaign.projectId` (nunca por parâmetro de rota, já que `:projectId` não existe na URL de
+    `Content`); ordem de validação obrigatória em rotas com `:campaignId` + `:id` (Content →
+    `content.campaignId === params.campaignId` → Campaign → Project → ownership) contra IDOR.
+    Testes unitários de ambos.
+  - **Bloco C (API REST):** `CreateContentDto`, `UpdateContentDto`, `ListContentsQueryDto`,
+    `ContentResponseDto`; `campaignId` nunca é campo de body, sempre vem da rota.
+    `ContentsController` sob `/v1/campaigns/:campaignId/contents`:
+
+    ```
+    POST   /v1/campaigns/:campaignId/contents
+    GET    /v1/campaigns/:campaignId/contents
+    GET    /v1/campaigns/:campaignId/contents/:id
+    PATCH  /v1/campaigns/:campaignId/contents/:id
+    POST   /v1/campaigns/:campaignId/contents/:id/archive
+    ```
+
+    `ContentModule` registrado em `AppModule`. `@UseGuards(ContentOwnershipGuard)` declarado
+    explicitamente em toda rota, incluindo `create`/`list` — auditado e confirmado que o guard
+    (Bloco B) já cobre os dois contextos de rota (com/sem `:id`) sem necessidade de alteração,
+    provado por teste unitário dedicado por metadado (`@UseGuards`) nos cinco handlers. Swagger
+    documentando os cinco cenários de `404` da `ADR-012`. Testes E2E cobrindo fluxo completo,
+    isolamento entre usuários, acesso administrativo, proteção contra IDOR (tanto entre usuários
+    diferentes quanto com `:campaignId` de outra campanha do próprio usuário), Project ancestral
+    inexistente, paginação, filtros, validação de entrada e conflito de estado no `archive`.
+
 ## Changed
 
 - **BREAKING (Bloco C):** todas as rotas de negócio migram para `/v1`: `/auth/login` →
