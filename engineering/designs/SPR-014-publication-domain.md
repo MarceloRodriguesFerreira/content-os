@@ -1,6 +1,6 @@
 # SPR-014 — Domínio: Publication (Design Doc)
 
-Status: Accepted
+Status: Proposed — submetido à revisão do Arquiteto-Chefe
 
 ## Contexto
 
@@ -19,9 +19,9 @@ como gatilho de reavaliação arquitetural na seção "Future Evolution" de `ADR
 
 Modelar `Publication` como registro de **intenção** de publicação de um `Content` em um canal
 externo — sem executar nenhuma publicação real. Esta sprint entrega persistência, regras de
-lifecycle, ownership e uma API REST completa para criar/consultar/atualizar esse registro. Não
-entrega nenhum efeito fora do banco de dados: nenhuma chamada de rede a serviço externo, nenhum
-agendamento executado de fato.
+lifecycle, ownership e uma API REST para criar, listar, consultar e atualizar (`PATCH`) esse
+registro, sem `DELETE`. Não entrega nenhum efeito fora do banco de dados: nenhuma chamada de
+rede a serviço externo, nenhum agendamento executado de fato.
 
 Decisões de arquitetura: `ADR-013-publication-domain-and-ownership-strategy.md`.
 
@@ -95,14 +95,15 @@ nominalmente em `VISION.md`. Extensível via nova migration quando outro canal f
   ao voltar para `DRAFT`.
 - **Não existem, nesta sprint:** `PUBLISHED`, `FAILED`, `RETRYING`, ou qualquer transição para
   eles. Todos dependem de execução real (ver "Limites da sprint" abaixo). Ver `ADR-013` seção 6.
-- Sem `DELETE` físico.
+- Não há `DELETE` físico nesta sprint.
 
 ## Limites da sprint
 
 Fronteira decidida em `ADR-013` seção 7, por camada:
 
 - **Dentro:** modelo de domínio (`Publication`, `scheduledAt` como dado persistido), lifecycle
-  `DRAFT ⇄ SCHEDULED`, ownership derivada, CRUD, API REST, Swagger, testes.
+  `DRAFT ⇄ SCHEDULED`, ownership derivada, API REST (`POST`, `GET` de lista, `GET` por id e
+  `PATCH`; sem `DELETE`), Swagger, testes.
 - **Fora — agendamento real:** nenhum worker, fila ou cron. `scheduledAt` não é lido por nenhum
   processo nesta sprint. Não existe, hoje, nenhuma infraestrutura de fila/scheduler no monorepo.
 - **Fora — integração externa:** nenhuma chamada a API do Instagram/Meta, nenhum OAuth, nenhuma
@@ -155,9 +156,12 @@ requisição quando esses valores já são determinados pela rota (`contentId` v
 `campaignId` é usado apenas para validação de consistência do path, mesmo critério de
 `ContentsController`/`ADR-012`).
 
-Nomenclatura da rota (quatro segmentos aninhados) proposta para manter a mesma filosofia de
-autorização/IDOR já estabelecida — a confirmar formalmente com o Arquiteto-Chefe antes do Bloco
-C, caso prefira uma forma alternativa.
+Não há `DELETE` físico nesta sprint. O desagendamento é a transição `SCHEDULED → DRAFT`,
+realizada via `PATCH`.
+
+A rota `/v1/campaigns/:campaignId/contents/:contentId/publications` é a decisão proposta e
+documentada (ver `ADR-013` seção 8), mantendo a mesma filosofia de autorização/IDOR já
+estabelecida em `Content`.
 
 ## Estratégia de autorização
 
@@ -203,6 +207,7 @@ que justifique um quarto bloco.
 
 ## Fora de escopo (explicitamente, nesta sprint)
 
+- `DELETE` físico de `Publication` — não há remoção nesta sprint
 - Agendamento real (worker, fila, cron) — `scheduledAt` é apenas dado de domínio
 - Integração externa (Meta/Instagram, OAuth, chamada de API) — sprint futura própria, possível
   ADR dedicado
@@ -235,5 +240,4 @@ As decisões abaixo estão fechadas para esta sprint, sem pendências de domíni
 | API | `/v1/campaigns/:campaignId/contents/:contentId/publications` |
 | Divisão em blocos | A (Persistência) / B (Regras e Autorização) / C (API REST) |
 
-Design Freeze aprovado pelo Arquiteto-Chefe. Bloco A autorizado a iniciar mediante nova
-solicitação explícita.
+Design Freeze submetido à revisão do Arquiteto-Chefe.
