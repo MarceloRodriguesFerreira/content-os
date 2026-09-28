@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Proposed — submetido à revisão do Arquiteto-Chefe.
 
 ## Context
 
@@ -141,6 +141,24 @@ Fronteira explícita desta sprint, decidida por camada:
 - **`PublicationAttempt` / retry / idempotência / histórico de tentativas — fora de escopo.**
   Nenhum desses conceitos tem sentido sem execução real. Não são criadas tabelas ou campos para
   eles nesta sprint.
+
+### 8. Contrato de rota e operações previstas
+
+A API de `Publication` é aninhada sob `Campaign` e `Content`, sem expor `:projectId` na URL
+(mesma filosofia de `Content`, `ADR-012`):
+
+```
+POST   /v1/campaigns/:campaignId/contents/:contentId/publications
+GET    /v1/campaigns/:campaignId/contents/:contentId/publications
+GET    /v1/campaigns/:campaignId/contents/:contentId/publications/:id
+PATCH  /v1/campaigns/:campaignId/contents/:contentId/publications/:id
+```
+
+Esta rota é a decisão proposta e documentada nesta ADR, no Design Doc e no backlog da sprint.
+`campaignId` e `contentId` são determinados pela rota e não são aceitos no corpo da requisição.
+
+Não há `DELETE` físico nesta sprint. A API não contempla remoção de `Publication`; o
+desagendamento é a transição `SCHEDULED → DRAFT`, realizada via `PATCH`.
 
 ## Consequences
 
