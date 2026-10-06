@@ -40,3 +40,18 @@ export const ContentStatus = {
 } as const
 
 export type ContentStatus = (typeof ContentStatus)[keyof typeof ContentStatus]
+
+
+export const PublicationChannel = {
+  INSTAGRAM: 'INSTAGRAM'
+} as const
+
+export type PublicationChannel = (typeof PublicationChannel)[keyof typeof PublicationChannel]
+
+
+export const PublicationStatus = {
+  DRAFT: 'DRAFT',
+  SCHEDULED: 'SCHEDULED'
+} as const
+
+export type PublicationStatus = (typeof PublicationStatus)[keyof typeof PublicationStatus]

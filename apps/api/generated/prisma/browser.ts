@@ -38,6 +38,22 @@ export type Campaign = Prisma.CampaignModel
  */
 export type Content = Prisma.ContentModel
 /**
+ * Model Publication
+ * Publication é o quarto agregado do domínio, filho de Content
+ * (Project → Campaign → Content → Publication). Registro de *intenção* de
+ * publicação — não produz nenhum efeito fora do banco de dados nesta
+ * sprint (sem integração externa, sem agendamento executado).
+ * 
+ * Sem `ownerId` próprio: ownership é sempre derivada via
+ * Publication.contentId → Content.campaignId → Campaign.projectId →
+ * Project.ownerId (ver ADR-013).
+ * 
+ * Cardinalidade Content → Publication é 1:N (sem unicidade em
+ * `contentId`): um mesmo Content pode ter várias Publications, inclusive
+ * mais de uma para o mesmo canal (ver ADR-013, seção 1).
+ */
+export type Publication = Prisma.PublicationModel
+/**
  * Model RefreshToken
  * 
  */

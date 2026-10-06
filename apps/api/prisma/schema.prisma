@@ -101,18 +101,61 @@ enum ContentStatus {
 }
 
 model Content {
-  id         String        @id @default(cuid())
-  name       String
-  body       String?
-  status     ContentStatus @default(ACTIVE)
-  campaignId String
-  campaign   Campaign      @relation(fields: [campaignId], references: [id])
+  id           String        @id @default(cuid())
+  name         String
+  body         String?
+  status       ContentStatus @default(ACTIVE)
+  campaignId   String
+  campaign     Campaign      @relation(fields: [campaignId], references: [id])
+  publications Publication[]
 
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
   @@index([campaignId])
   @@map("contents")
+}
+
+/// Canal de destino de uma Publication. Nesta sprint, exclusivamente `INSTAGRAM`
+/// (único canal citado em VISION.md) — enum extensível por migration, sem
+/// necessidade de mudança estrutural (ver ADR-013, seção 5).
+enum PublicationChannel {
+  INSTAGRAM
+}
+
+/// Estados de Publication nesta sprint. `PUBLISHED`/`FAILED`/`RETRYING` não
+/// existem — dependem de execução real, fora de escopo da SPR-014 (ver
+/// ADR-013, seção 6, e SPR-014-publication-domain.md).
+enum PublicationStatus {
+  DRAFT
+  SCHEDULED
+}
+
+/// Publication é o quarto agregado do domínio, filho de Content
+/// (Project → Campaign → Content → Publication). Registro de *intenção* de
+/// publicação — não produz nenhum efeito fora do banco de dados nesta
+/// sprint (sem integração externa, sem agendamento executado).
+///
+/// Sem `ownerId` próprio: ownership é sempre derivada via
+/// Publication.contentId → Content.campaignId → Campaign.projectId →
+/// Project.ownerId (ver ADR-013).
+///
+/// Cardinalidade Content → Publication é 1:N (sem unicidade em
+/// `contentId`): um mesmo Content pode ter várias Publications, inclusive
+/// mais de uma para o mesmo canal (ver ADR-013, seção 1).
+model Publication {
+  id          String             @id @default(cuid())
+  contentId   String
+  content     Content            @relation(fields: [contentId], references: [id])
+  channel     PublicationChannel
+  status      PublicationStatus  @default(DRAFT)
+  scheduledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contentId])
+  @@map("publications")
 }
 
 model RefreshToken {

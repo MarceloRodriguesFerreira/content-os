@@ -435,10 +435,6 @@ export type RefreshTokenUncheckedCreateNestedOneWithoutReplacedByTokenInput = {
   connect?: Prisma.RefreshTokenWhereUniqueInput
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type RefreshTokenUpdateOneWithoutReplacedTokenNestedInput = {
   create?: Prisma.XOR<Prisma.RefreshTokenCreateWithoutReplacedTokenInput, Prisma.RefreshTokenUncheckedCreateWithoutReplacedTokenInput>
   connectOrCreate?: Prisma.RefreshTokenCreateOrConnectWithoutReplacedTokenInput
