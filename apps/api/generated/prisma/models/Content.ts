@@ -199,6 +199,7 @@ export type ContentWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Content"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Content"> | Date | string
   campaign?: Prisma.XOR<Prisma.CampaignScalarRelationFilter, Prisma.CampaignWhereInput>
+  publications?: Prisma.PublicationListRelationFilter
 }
 
 export type ContentOrderByWithRelationInput = {
@@ -210,6 +211,7 @@ export type ContentOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   campaign?: Prisma.CampaignOrderByWithRelationInput
+  publications?: Prisma.PublicationOrderByRelationAggregateInput
 }
 
 export type ContentWhereUniqueInput = Prisma.AtLeast<{
@@ -224,6 +226,7 @@ export type ContentWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Content"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Content"> | Date | string
   campaign?: Prisma.XOR<Prisma.CampaignScalarRelationFilter, Prisma.CampaignWhereInput>
+  publications?: Prisma.PublicationListRelationFilter
 }, "id">
 
 export type ContentOrderByWithAggregationInput = {
@@ -260,6 +263,7 @@ export type ContentCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   campaign: Prisma.CampaignCreateNestedOneWithoutContentsInput
+  publications?: Prisma.PublicationCreateNestedManyWithoutContentInput
 }
 
 export type ContentUncheckedCreateInput = {
@@ -270,6 +274,7 @@ export type ContentUncheckedCreateInput = {
   campaignId: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutContentInput
 }
 
 export type ContentUpdateInput = {
@@ -280,6 +285,7 @@ export type ContentUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   campaign?: Prisma.CampaignUpdateOneRequiredWithoutContentsNestedInput
+  publications?: Prisma.PublicationUpdateManyWithoutContentNestedInput
 }
 
 export type ContentUncheckedUpdateInput = {
@@ -290,6 +296,7 @@ export type ContentUncheckedUpdateInput = {
   campaignId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutContentNestedInput
 }
 
 export type ContentCreateManyInput = {
@@ -361,6 +368,11 @@ export type ContentMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type ContentScalarRelationFilter = {
+  is?: Prisma.ContentWhereInput
+  isNot?: Prisma.ContentWhereInput
+}
+
 export type ContentCreateNestedManyWithoutCampaignInput = {
   create?: Prisma.XOR<Prisma.ContentCreateWithoutCampaignInput, Prisma.ContentUncheckedCreateWithoutCampaignInput> | Prisma.ContentCreateWithoutCampaignInput[] | Prisma.ContentUncheckedCreateWithoutCampaignInput[]
   connectOrCreate?: Prisma.ContentCreateOrConnectWithoutCampaignInput | Prisma.ContentCreateOrConnectWithoutCampaignInput[]
@@ -407,6 +419,20 @@ export type EnumContentStatusFieldUpdateOperationsInput = {
   set?: $Enums.ContentStatus
 }
 
+export type ContentCreateNestedOneWithoutPublicationsInput = {
+  create?: Prisma.XOR<Prisma.ContentCreateWithoutPublicationsInput, Prisma.ContentUncheckedCreateWithoutPublicationsInput>
+  connectOrCreate?: Prisma.ContentCreateOrConnectWithoutPublicationsInput
+  connect?: Prisma.ContentWhereUniqueInput
+}
+
+export type ContentUpdateOneRequiredWithoutPublicationsNestedInput = {
+  create?: Prisma.XOR<Prisma.ContentCreateWithoutPublicationsInput, Prisma.ContentUncheckedCreateWithoutPublicationsInput>
+  connectOrCreate?: Prisma.ContentCreateOrConnectWithoutPublicationsInput
+  upsert?: Prisma.ContentUpsertWithoutPublicationsInput
+  connect?: Prisma.ContentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ContentUpdateToOneWithWhereWithoutPublicationsInput, Prisma.ContentUpdateWithoutPublicationsInput>, Prisma.ContentUncheckedUpdateWithoutPublicationsInput>
+}
+
 export type ContentCreateWithoutCampaignInput = {
   id?: string
   name: string
@@ -414,6 +440,7 @@ export type ContentCreateWithoutCampaignInput = {
   status?: $Enums.ContentStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  publications?: Prisma.PublicationCreateNestedManyWithoutContentInput
 }
 
 export type ContentUncheckedCreateWithoutCampaignInput = {
@@ -423,6 +450,7 @@ export type ContentUncheckedCreateWithoutCampaignInput = {
   status?: $Enums.ContentStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutContentInput
 }
 
 export type ContentCreateOrConnectWithoutCampaignInput = {
@@ -464,6 +492,62 @@ export type ContentScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Content"> | Date | string
 }
 
+export type ContentCreateWithoutPublicationsInput = {
+  id?: string
+  name: string
+  body?: string | null
+  status?: $Enums.ContentStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  campaign: Prisma.CampaignCreateNestedOneWithoutContentsInput
+}
+
+export type ContentUncheckedCreateWithoutPublicationsInput = {
+  id?: string
+  name: string
+  body?: string | null
+  status?: $Enums.ContentStatus
+  campaignId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type ContentCreateOrConnectWithoutPublicationsInput = {
+  where: Prisma.ContentWhereUniqueInput
+  create: Prisma.XOR<Prisma.ContentCreateWithoutPublicationsInput, Prisma.ContentUncheckedCreateWithoutPublicationsInput>
+}
+
+export type ContentUpsertWithoutPublicationsInput = {
+  update: Prisma.XOR<Prisma.ContentUpdateWithoutPublicationsInput, Prisma.ContentUncheckedUpdateWithoutPublicationsInput>
+  create: Prisma.XOR<Prisma.ContentCreateWithoutPublicationsInput, Prisma.ContentUncheckedCreateWithoutPublicationsInput>
+  where?: Prisma.ContentWhereInput
+}
+
+export type ContentUpdateToOneWithWhereWithoutPublicationsInput = {
+  where?: Prisma.ContentWhereInput
+  data: Prisma.XOR<Prisma.ContentUpdateWithoutPublicationsInput, Prisma.ContentUncheckedUpdateWithoutPublicationsInput>
+}
+
+export type ContentUpdateWithoutPublicationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  body?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumContentStatusFieldUpdateOperationsInput | $Enums.ContentStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  campaign?: Prisma.CampaignUpdateOneRequiredWithoutContentsNestedInput
+}
+
+export type ContentUncheckedUpdateWithoutPublicationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  body?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumContentStatusFieldUpdateOperationsInput | $Enums.ContentStatus
+  campaignId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type ContentCreateManyCampaignInput = {
   id?: string
   name: string
@@ -480,6 +564,7 @@ export type ContentUpdateWithoutCampaignInput = {
   status?: Prisma.EnumContentStatusFieldUpdateOperationsInput | $Enums.ContentStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  publications?: Prisma.PublicationUpdateManyWithoutContentNestedInput
 }
 
 export type ContentUncheckedUpdateWithoutCampaignInput = {
@@ -489,6 +574,7 @@ export type ContentUncheckedUpdateWithoutCampaignInput = {
   status?: Prisma.EnumContentStatusFieldUpdateOperationsInput | $Enums.ContentStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutContentNestedInput
 }
 
 export type ContentUncheckedUpdateManyWithoutCampaignInput = {
@@ -501,6 +587,35 @@ export type ContentUncheckedUpdateManyWithoutCampaignInput = {
 }
 
 
+/**
+ * Count Type ContentCountOutputType
+ */
+
+export type ContentCountOutputType = {
+  publications: number
+}
+
+export type ContentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  publications?: boolean | ContentCountOutputTypeCountPublicationsArgs
+}
+
+/**
+ * ContentCountOutputType without action
+ */
+export type ContentCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ContentCountOutputType
+   */
+  select?: Prisma.ContentCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ContentCountOutputType without action
+ */
+export type ContentCountOutputTypeCountPublicationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PublicationWhereInput
+}
+
 
 export type ContentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -511,6 +626,8 @@ export type ContentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   createdAt?: boolean
   updatedAt?: boolean
   campaign?: boolean | Prisma.CampaignDefaultArgs<ExtArgs>
+  publications?: boolean | Prisma.Content$publicationsArgs<ExtArgs>
+  _count?: boolean | Prisma.ContentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["content"]>
 
 export type ContentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -548,6 +665,8 @@ export type ContentSelectScalar = {
 export type ContentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "body" | "status" | "campaignId" | "createdAt" | "updatedAt", ExtArgs["result"]["content"]>
 export type ContentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   campaign?: boolean | Prisma.CampaignDefaultArgs<ExtArgs>
+  publications?: boolean | Prisma.Content$publicationsArgs<ExtArgs>
+  _count?: boolean | Prisma.ContentCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ContentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   campaign?: boolean | Prisma.CampaignDefaultArgs<ExtArgs>
@@ -560,6 +679,7 @@ export type $ContentPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   name: "Content"
   objects: {
     campaign: Prisma.$CampaignPayload<ExtArgs>
+    publications: Prisma.$PublicationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -964,6 +1084,7 @@ readonly fields: ContentFieldRefs;
 export interface Prisma__ContentClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   campaign<T extends Prisma.CampaignDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CampaignDefaultArgs<ExtArgs>>): Prisma.Prisma__CampaignClient<runtime.Types.Result.GetResult<Prisma.$CampaignPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  publications<T extends Prisma.Content$publicationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Content$publicationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PublicationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1398,6 +1519,30 @@ export type ContentDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Limit how many Contents to delete.
    */
   limit?: number
+}
+
+/**
+ * Content.publications
+ */
+export type Content$publicationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Publication
+   */
+  select?: Prisma.PublicationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Publication
+   */
+  omit?: Prisma.PublicationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PublicationInclude<ExtArgs> | null
+  where?: Prisma.PublicationWhereInput
+  orderBy?: Prisma.PublicationOrderByWithRelationInput | Prisma.PublicationOrderByWithRelationInput[]
+  cursor?: Prisma.PublicationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PublicationScalarFieldEnum | Prisma.PublicationScalarFieldEnum[]
 }
 
 /**
