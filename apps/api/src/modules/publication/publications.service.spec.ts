@@ -186,4 +186,46 @@ describe('PublicationsService', () => {
       expect(repository.update).not.toHaveBeenCalled();
     });
   });
+
+  describe('list', () => {
+    it('traduz page/limit para skip/take e repassa status quando informado', async () => {
+      repository.findManyByContent.mockResolvedValue({
+        items: [draftPublication],
+        total: 1,
+      });
+
+      const result = await service.list('ct1', {
+        page: 2,
+        limit: 10,
+        status: PublicationStatus.DRAFT,
+      });
+
+      expect(repository.findManyByContent).toHaveBeenCalledWith({
+        contentId: 'ct1',
+        status: PublicationStatus.DRAFT,
+        skip: 10,
+        take: 10,
+      });
+      expect(result).toEqual({
+        items: [draftPublication],
+        meta: { page: 2, limit: 10, total: 1, totalPages: 1 },
+      });
+    });
+
+    it('não filtra por status quando omitido — lista DRAFT e SCHEDULED juntos', async () => {
+      repository.findManyByContent.mockResolvedValue({
+        items: [draftPublication, scheduledPublication],
+        total: 2,
+      });
+
+      await service.list('ct1', { page: 1, limit: 20 });
+
+      expect(repository.findManyByContent).toHaveBeenCalledWith({
+        contentId: 'ct1',
+        status: undefined,
+        skip: 0,
+        take: 20,
+      });
+    });
+  });
 });

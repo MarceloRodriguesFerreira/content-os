@@ -12,6 +12,21 @@ import {
 } from '../../../generated/prisma/client';
 
 /**
+ * Mesmo shape de `PaginatedResult<T>` já usado em `ContentsService`/
+ * `CampaignsService`/`ProjectsService`. Definido localmente — mesmo
+ * critério de isolamento entre módulos.
+ */
+export interface PaginatedResult<T> {
+  items: T[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+/**
  * Regras de negócio do lifecycle de `Publication` (SPR-014, Bloco B). Não
  * conhece DTOs HTTP nem faz verificação de propriedade — `Publication` não
  * possui `ownerId` próprio, e a propriedade é sempre derivada via
@@ -124,5 +139,38 @@ export class PublicationsService {
       status: PublicationStatus.DRAFT,
       scheduledAt: null,
     });
+  }
+
+  /**
+   * Lista publications de um content, paginadas e opcionalmente filtradas
+   * por status. Diferente de `ContentsService.list` (que filtra `ACTIVE`
+   * por padrão), `status` omitido aqui não filtra nada — `Publication` não
+   * tem um estado "arquivado" para ocultar por padrão, então as duas únicas
+   * possibilidades (`DRAFT`/`SCHEDULED`) aparecem juntas quando nenhum
+   * filtro é informado.
+   *
+   * Adicionado no Bloco C (Controller precisa, Repository já oferecia
+   * `findManyByContent` desde o Bloco A) — nenhum método já aprovado do
+   * Bloco B foi alterado.
+   */
+  async list(
+    contentId: string,
+    params: { page: number; limit: number; status?: PublicationStatus },
+  ): Promise<PaginatedResult<Publication>> {
+    const { page, limit, status } = params;
+    const skip = (page - 1) * limit;
+
+    const { items, total } =
+      await this.publicationsRepository.findManyByContent({
+        contentId,
+        status,
+        skip,
+        take: limit,
+      });
+
+    return {
+      items,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   }
 }
