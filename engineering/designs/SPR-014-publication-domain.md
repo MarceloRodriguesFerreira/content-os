@@ -1,6 +1,6 @@
 # SPR-014 — Domínio: Publication (Design Doc)
 
-Status: Proposed — submetido à revisão do Arquiteto-Chefe
+Status: Accepted
 
 ## Contexto
 
@@ -240,4 +240,5 @@ As decisões abaixo estão fechadas para esta sprint, sem pendências de domíni
 | API | `/v1/campaigns/:campaignId/contents/:contentId/publications` |
 | Divisão em blocos | A (Persistência) / B (Regras e Autorização) / C (API REST) |
 
-Design Freeze submetido à revisão do Arquiteto-Chefe.
+Design Freeze aprovado pelo Arquiteto-Chefe. Blocos A, B e C implementados, aprovados e
+mergeados em `main` — ver `engineering/backlog/SPR-014.md` para o registro de encerramento.

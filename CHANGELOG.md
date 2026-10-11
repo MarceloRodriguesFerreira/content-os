@@ -145,6 +145,50 @@ O formato segue as recomendações do Keep a Changelog e utiliza Versionamento S
     diferentes quanto com `:campaignId` de outra campanha do próprio usuário), Project ancestral
     inexistente, paginação, filtros, validação de entrada e conflito de estado no `archive`.
 
+- **Domínio: Publication (SPR-014)** — quarto agregado do domínio, primeiro recurso de quarto
+  nível do Content-OS (bisneto de `Project`, filho de `Content`), sem `ownerId` próprio;
+  ownership derivada de `Publication.contentId → Content.campaignId → Campaign.projectId →
+  Project.ownerId`. Cardinalidade `Content → Publication` 1:N (sem `UNIQUE(contentId)`).
+  Decisões registradas em `ADR-013-publication-domain-and-ownership-strategy.md` e
+  `engineering/designs/SPR-014-publication-domain.md`.
+
+  - **Bloco A (Persistência):** `enum PublicationChannel` (`INSTAGRAM`) e `enum
+    PublicationStatus` (`DRAFT`, `SCHEDULED`), `model Publication` (`schema.prisma`), migration
+    `20260928224558_add_publications`, `PublicationsRepository` (Repository Pattern —
+    `findById`, `findManyByContent` paginado/filtrado, `create`, `update`), sem método de
+    exclusão (sem `DELETE` físico nesta sprint). Testes unitários do Repository.
+  - **Bloco B (Regras de Negócio):** `PublicationsService` (`create` — sempre `DRAFT`,
+    `scheduledAt = null`; `findById`; `schedule` — `DRAFT → SCHEDULED`, exige `scheduledAt`
+    obrigatório e estritamente futuro; `unschedule` — `SCHEDULED → DRAFT`, limpa `scheduledAt`
+    para `null`). Transições não-idempotentes: `409` ao repetir o mesmo estado (mesmo critério
+    de `ContentsService.archive()`). Sem `PUBLISHED`/`FAILED`/`RETRYING` — dependem de execução
+    real, fora de escopo. Sem verificação de ownership (responsabilidade exclusiva do guard).
+    Testes unitários.
+  - **Bloco C (API REST):** `CreatePublicationDto` (sem `scheduledAt` — a criação nunca aceita
+    agendamento direto), `UpdatePublicationDto` (`status` alvo + `scheduledAt` opcional, com
+    validador customizado rejeitando a combinação inválida `status=DRAFT` + `scheduledAt`
+    preenchido), `ListPublicationsQueryDto`, `PublicationResponseDto` (sem `ownerId`).
+    `PublicationsController` sob `/v1/campaigns/:campaignId/contents/:contentId/publications`:
+
+    ```
+    POST   /v1/campaigns/:campaignId/contents/:contentId/publications
+    GET    /v1/campaigns/:campaignId/contents/:contentId/publications
+    GET    /v1/campaigns/:campaignId/contents/:contentId/publications/:id
+    PATCH  /v1/campaigns/:campaignId/contents/:contentId/publications/:id
+    ```
+
+    Sem `DELETE` físico — o desagendamento é a transição `SCHEDULED → DRAFT` via `PATCH`.
+    `PublicationModule` registrado em `AppModule`. `PublicationOwnershipGuard` (`ADR-013`)
+    aplicado explicitamente em toda rota, incluindo `create`/`list`; diferente de
+    `ContentOwnershipGuard`, valida `:contentId` incondicionalmente (sempre presente na rota de
+    Publication, mesmo sem `:id`) — quarta reavaliação da extração de um guard genérico entre os
+    quatro agregados, deliberadamente adiada (`ADR-013`). Swagger documentando os cenários de
+    `404`/`409`. Testes E2E (27 casos) cobrindo fluxo completo, isolamento entre usuários, acesso
+    administrativo, proteção contra IDOR (entre usuários e com `:contentId`/`:campaignId` de
+    outro recurso do próprio usuário), ancestral inexistente em qualquer nível da cadeia,
+    transições de lifecycle válidas/inválidas (incluindo `409` em transição repetida),
+    paginação, filtro por status e `forbidNonWhitelisted`.
+
 ## Changed
 
 - **BREAKING (Bloco C):** todas as rotas de negócio migram para `/v1`: `/auth/login` →

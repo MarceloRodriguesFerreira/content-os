@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed — submetido à revisão do Arquiteto-Chefe.
+Accepted
 
 ## Context
 
