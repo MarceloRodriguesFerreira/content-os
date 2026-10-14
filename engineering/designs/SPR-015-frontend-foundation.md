@@ -1,0 +1,364 @@
+# SPR-015 — Frontend Foundation (Design Doc)
+
+Status: **PROPOSTA — NÃO APROVADA** (`Proposed`) — revisão 8. A revisão 7 foi avaliada pelo Arquiteto-Chefe e **não foi aprovada como
+baseline**. **Design Freeze: não declarado.** **Nenhum bloco está autorizado.** Documento destinado a
+`engineering/designs/SPR-015-frontend-foundation.md`; **não está em `main`**.
+
+Decisões de arquitetura: `engineering/adr/ADR-014-frontend-authentication-and-session.md` (também **proposta, não aprovada**) — contém a legenda
+de estados, os fatos F1–F27, as hipóteses HIP-1…24, os riscos RA-* e a comparação P2. Backlog: `engineering/backlog/SPR-015.md` (proposta).
+
+**Legenda (idêntica à da ADR):** **[FATO-L]** verificado por leitura · **[FATO-E]** verificado por execução · **[INFO]** informado, não verificado ·
+**[HIP-n]** hipótese · **[PROP]** proposta técnica do Claude · **[PEND]** aguarda o Arquiteto-Chefe · **[APROV]** aprovada (**nenhuma**) ·
+**[BLQ-IMPL]** bloqueia implementação · **[BLQ-DEPL]** bloqueia implantação. Toda decisão deste documento é **[PROP][PEND]**.
+
+## Contexto
+
+`apps/web` é o scaffold do `create-next-app` (`app/layout.tsx`, `app/page.tsx`, CSS padrão); sem `proxy`, sem env, sem script `test` **[FATO-L]**.
+`PROJECT_STATUS.md` afirma "Frontend ✅ Operacional" — **divergente** da realidade; este documento descreve o estado real e **não corrige**
+`PROJECT_STATUS.md` (P7). `ADR-014` e documentos da SPR-015 **não existiam em `main`** (revisão 8: `main` = `3480229`, sem commits novos, clone sem
+alterações) **[FATO-L]**. A revisão 2 reescreveu uma versão anterior indisponível; as revisões 3 a 8 derivam da anterior; **não há evidência** de
+que decisões anteriores à revisão 2 tenham sido preservadas. **Nenhum código e nenhum teste foram executados na revisão 8.**
+
+**Contexto de execução — [INFO], não verificado:** ambiente **Windows**; `main` **protegida** (branch → PR → merge); patches em
+`C:\Users\marceloferreira\Downloads`; Docker Compose em `.\docker\docker-compose.yml`; `apps/api` não pode ser alterada sem autorização
+arquitetural específica. **Confirmado por leitura, nada executado [FATO-L]:** o arquivo de Compose existe e define o serviço `postgres`; a raiz
+**não** tem `test` nem `test:e2e` (`pnpm test:e2e` na raiz **não existe**); o `test:e2e` oficial é `pnpm --filter api test:e2e`; o web **não** tem
+script `test`; o `lint` da API usa `--fix`.
+
+## Objetivo
+
+Uma pessoa autenticada consegue entrar (`/login`), ver seus projetos (`/projects`), criar um projeto e sair, com falhas tratadas conforme a
+ADR-014, sem alterar `apps/api`. **A renovação de token é isolada no Bloco B2 e depende de decisões pendentes (P2, P10, P11).**
+
+## Limites da sprint
+
+**Dentro (se aprovado):** `/login`, `/projects` (lista + criação), `GET /v1/users/me`, logout, encerramento de sessão (`end`), `proxy.ts`, DAL,
+validação de origem, Vitest em `apps/web`, `apps/web/.env.example`; e, **somente no Bloco B2 e sob decisão do Arquiteto-Chefe**, a renovação
+(etapa intermediária + `POST renew`).
+**Fora:** registro de usuário, `Campaign`/`Content`/`Publication`, editar/arquivar `Project`, rate limiting, qualquer alteração em `apps/api`,
+`turbo.json`, `package.json` raiz, `.github/workflows/ci.yml`, `PROJECT_STATUS.md` (até o encerramento), Playwright, Testing Library, bibliotecas
+de sessão/UI novas, serviços externos, deploy/proxy reverso.
+
+## Contratos da API consumidos — [FATO-L]
+
+| Uso | Chamada | Sucesso | Erros relevantes |
+|---|---|---|---|
+| Login | `POST /v1/auth/login` `{email, password}` | `200` `data:{accessToken, refreshToken}` | `401`; `400` |
+| Renovar | `POST /v1/auth/refresh` `{refreshToken}` | `200` `data:{accessToken, refreshToken}` | `401` (inválido/expirado/reusado → todas as sessões revogadas) |
+| Logout | `POST /v1/auth/logout` Bearer + `{refreshToken}` | `204` sem corpo (**não** prova revogação) | `401` access ausente/expirado |
+| Pessoa | `GET /v1/users/me` Bearer | `200` `data: UserResponseDto` | `401` |
+| Listar | `GET /v1/projects?page&limit&status` Bearer | `200` `data:{items, meta}` | `401` |
+| Criar | `POST /v1/projects` Bearer `{name, description?}` | `201` `data: ProjectResponseDto` | `400` (`message[]`), `401` |
+
+Envelopes: [F8]. Corpo fora desse formato é `unavailable` (em dados) ou ambíguo (na renovação, ADR §6).
+
+## Rotas previstas — [PROP][PEND]
+
+| Rota | Bloco | Método | Efeitos | Observação |
+|---|---|---|---|---|
+| `/login` | B1 | GET (página) + Server Action | Action grava cookies | Proxy não redireciona |
+| `/projects` | C | GET (página) + Server Action de criação | leitura via DAL | `401` ⇒ `end` (C) / renovação ou `end` (com B2) |
+| `/session/continue?mode&next` | B1 (`end`); B2 (`renew`, `unavailable`) | **GET** | **nenhum** (sem cookies, sem API) | `end`/`renew`: envio único automático do formulário `POST`; `unavailable`: sem envio automático; *(condicional a O2, **não aprovada**, só B2: bloqueio entre abas antes do envio em `renew`)* |
+| `/api/session/end` | B1 | **POST apenas** | remove cookies; **não** chama a API | origem validada (ADR §8); `303` `/login?reason=session` |
+| `/api/session/logout` | B1 (sem renovação); B2 (com renovação) | **POST apenas** | chama a API de logout + remove cookies | origem validada; `303` `/login`; mensagem A/B |
+| `/api/session/renew` | **B2** | **POST apenas** | rotação de token + `Set-Cookie` | origem validada **antes de agir**; `303`; `no-store` |
+
+**Semântica (P10):** `end` encerra a sessão **local** sem chamar a API; `renew` tenta renovar via `POST`; `unavailable` só informa e oferece nova tentativa
+manual. Nada que altera sessão responde a `GET`.
+
+## Estratégia de autorização — [PROP][PEND]
+
+O Proxy verifica **só a presença** de `cos_access` (navegação otimista); **não** é autenticação. Todo dado protegido passa pelo DAL, que envia o
+`Bearer` e deixa a **API decidir**; `401` ⇒ `end` (B1/C) ou renovação/`end` (B2); `403` ⇒ "sem permissão" sem tocar cookies; `5xx`/rede ⇒ "indisponível" sem
+tocar cookies. Detalhes e limites do Proxy: ADR §3. Validação de origem dos `POST` de sessão: ADR §8. **Fronteiras** (navegador, Proxy, servidor
+Next, DAL, API): ADR §1 — a API **não** é alterada.
+
+## Configuração — [PROP][PEND] (P1, P12)
+
+| Variável (nome proposto) | Regra |
+|---|---|
+| `API_BASE_URL` | obrigatória, sem padrão, só servidor; URL absoluta `http`/`https` sem credenciais; exemplo local em `.env.example` |
+| `SESSION_COOKIE_MAX_AGE_SECONDS` | obrigatória, sem padrão silencioso, inteiro positivo; **operacionalmente não superior** ao `JWT_REFRESH_TTL` **efetivo** da API do mesmo ambiente (conferência humana registrada; os defaults `15m`/`7d` **não** são presumidos como efetivos — ADR F7) |
+| `APP_ORIGIN` | obrigatória, sem padrão, só servidor; origem `http`/`https` pura (sem path/query/userinfo) = origem **pública** vista pelo navegador; usada na validação de origem dos `POST` de sessão (ADR §8); exemplo local `http://localhost:3000` |
+
+**Validação:** função pura `loadConfig` na primeira utilização; **se aprovado e verificado**, também na inicialização via `instrumentation.ts` (`register`
+roda uma vez antes de o servidor atender — **[FATO-L]**; se uma exceção ali impede a subida é **HIP-23**). Valor ausente/inválido ⇒ falha fechada
+(erro genérico `500`, motivo só no log). **Limite:** o frontend **não** consegue verificar o TTL da API nem a validade do token; o `Max-Age` é dica de
+ciclo de vida, e a validade real é a resposta `401` da API. `apps/web/.gitignore` ignora `.env*` **[FATO-E]**: versionar `apps/web/.env.example`
+exige a exceção `!.env.example` nesse arquivo.
+
+## Estrutura prevista (previsão, não contrato)
+
+```
+apps/web/
+  proxy.ts  vitest.config.ts  .env.example
+  app/
+    layout.tsx  page.tsx                  # page.tsx: redirect para /projects
+    login/page.tsx                        # + Server Action fina
+    projects/page.tsx
+    session/continue/page.tsx             # GET sem efeitos + componente cliente de envio único (B1: modo end; B2: renew/unavailable)
+    api/session/renew/route.ts            # só POST — somente B2
+    api/session/end/route.ts              # só POST
+    api/session/logout/route.ts           # só POST
+  lib/server/
+    config.ts  cookies.ts  api-client.ts (DAL)  session.ts
+    safe-next.ts  continue-model.ts  origin-check.ts  login.ts  end.ts  logout.ts  messages.ts      # A/B1
+    single-flight.ts  renew.ts  classify.ts  (lock-policy.ts se O2)                                   # B2
+  lib/api/envelope.ts
+  **/*.test.ts                            # colocalizados
+```
+
+Lógica em funções puras com o armazenamento de cookies **injetado**; handlers/Server Actions/página são casca fina.
+
+## Fluxos
+
+Normativos na ADR-014: cookies e configuração (§2), Proxy e DAL (§3), `end`/`renew` e anti-laço (§4), concorrência (§5), falhas ambíguas (§6),
+logout com quatro dimensões e revogação **nunca afirmada** (§7), origem (§8). Login: Server Action valida campos → `POST /v1/auth/login` → grava
+`cos_access` (`Path=/`) e `cos_refresh` (`Path=/api/session`) com o `Max-Age` configurado → redireciona ao `next` validado ou a `/projects`.
+
+## Estratégia de testes — [PROP][PEND] (P3, P5)
+
+### Níveis
+
+- **U — unitário:** Vitest puro, sem rede, sem Next em execução.
+- **I — integração com API simulada:** Vitest com servidor `node:http` local (porta efêmera) que **simula a API**, inclusive estado de rotação/reuso
+  do refresh token, lentidão, conexão recusada, soquete destruído após receber a requisição e respostas truncadas; invoca diretamente funções,
+  Route Handlers (`Request`/`NextRequest`) e o DAL.
+- **M — smoke manual de navegador contra a API real** + Postgres do Compose. Evidência: roteiro preenchido e capturas/observações no relatório do bloco.
+
+### Declarações de alcance (obrigatórias)
+
+1. Testes **U e I não comprovam** o comportamento real do Next.js (Proxy, Route Handlers, página `continue`, `redirect()` em streaming, prefetch,
+   Router Cache) **nem do navegador** (jar de cookies, `Path`, `Secure`, `303` após `POST`, envio automático do formulário, Web Locks).
+2. Os cenários **ambíguos** da renovação e do logout só são exercitados **na API simulada**; a API real não oferece como provocá-los de forma
+   controlada. A simulação prova o **comportamento do nosso código dado o modelo de API que assumimos**, não o da API real **em falhas
+   pós-rotação**.
+3. Os experimentos já feitos (revisão 3 e anteriores) foram em **Linux descartável**, Node 22.22.2, sobre o **scaffold**; **não comprovam** Windows,
+   Node 20 nem o `next build` do código final.
+4. Os critérios por comando abaixo são **alvos**: nenhum `check-types`/`build`/`test` do código da SPR-015 existe ainda.
+5. Nenhum resultado de teste da feature existe; **nada foi executado na revisão 8**.
+
+### Estado das evidências (separação obrigatória)
+
+**A. Já executado — revisões anteriores; Linux descartável, Node 22.22.2, pnpm 11.11.0; NÃO repetido na revisão 8 [FATO-E]:** instalação do workspace
+`web`; `vitest@5.0.3` e `4.1.11` rodando **5 testes de exemplo** (TS ESM, `NextRequest`/`NextResponse` com atributos de `Set-Cookie`, `fetch` mockado,
+single-flight com `Promise.all`); com `5.0.3` e um script `test` de exemplo: `pnpm --filter web test`, `check-types`, `lint`, `build` com exit 0 (app =
+**scaffold**); `pnpm --filter web test` sem script ⇒ exit 0 sem saída; sem arquivos de teste ⇒ exit 1; `turbo run test` ⇒ task inexistente; `git
+check-ignore` de `apps/web/.env.example`. **Verificado na revisão 5 (plataforma):** semântica de `URL`/`Headers` (ADR, evidências).
+**Limites:** não é Windows, não é Node 20, não é o código da SPR-015, não é CI.
+
+**B. Lido na revisão 8 [FATO-L]:** `main`, scripts, Docker Compose, `.env.example`, `CONTRIBUTING.md`, `ci.yml`, padrões de ADR/Design Doc/backlog,
+documentação instalada do Next sobre `instrumentation`; **nada executado**.
+
+**C. Proposto, não executado:** toda a matriz de critérios (AC-01…47 e variantes), os Blocos A, B1, C e B2 e os comandos de verificação no Windows.
+
+**D. Não verificado:** Windows; Node 20; `next build`/`check-types` do código da SPR-015; execução do Proxy, dos Route Handlers e da página
+`continue` no Next; resposta do Next a métodos não exportados; `cause.code` do `fetch` real; `Secure` em `http://localhost`; proxy reverso; `Origin`
+em `POST` pelos navegadores; envio único do formulário; Web Locks; `docker compose` v2 na máquina do Arquiteto-Chefe; **API real em falhas
+pós-rotação**; exceção em `register()`; CI (não executa o web).
+
+### Como o script de testes é introduzido
+
+O monorepo roda checagens por pacote com `pnpm --filter <pkg> <script>` (CI e `ENGINEERING_GUIDE.md`) **[FATO-L]**; `turbo.json` e a raiz não têm
+`test`. **Proposta:** o **Bloco A** adiciona a `apps/web/package.json` a devDependency `vitest` (`^5.0.3`, travada pelo `pnpm-lock.yaml`) e o script
+`"test": "vitest run"`, mais `vitest.config.ts`; **nada da raiz ou do Turborepo é tocado**. **Até o Bloco A (se autorizado), `pnpm --filter web test` não
+existe** e sai com exit 0 sem saída (falso verde **[FATO-E]**): por isso o critério exige **contagem de testes**. **`pnpm test:e2e` na raiz não é um comando
+válido**; o `test:e2e` oficial é `pnpm --filter api test:e2e` (a raiz tem o alias `pnpm api …`, **não executado**).
+
+### Compatibilidade — P3 [PROP][PEND]
+
+| Item | Exigência | Estado |
+|---|---|---|
+| Vitest 5.0.3 (proposto) | Node `^22.12 \|\| ^24 \|\| >=26` (23.x e 25.x **não**) | **[FATO-L]** (registro npm); executado só em Node 22 sobre o scaffold **[FATO-E]** |
+| Vitest 4.1.11 (alternativa) | Node `^20 \|\| ^22 \|\| >=24` | **[FATO-L]**; executado só em Node 22 **[FATO-E]** |
+| Next 16.2.0 | Node `>=20.9.0` | **[FATO-L]** |
+| CI atual | Node 22 | **[FATO-L]** |
+| Raiz `engines.node` | `>=18` — conflita com Next 16.2.0 e Vitest | **[FATO-L]**; documentado, **sem alterar** `package.json` (P8) |
+
+**Proposta:** Node 22 (**versão mínima 22.12**) + Vitest 5.0.3. Ambiente abaixo disso impede iniciar o Bloco A (pré-requisito técnico). Verificação no
+Windows (PowerShell/cmd), a registrar no relatório do Bloco A — **comandos propostos, não executados**:
+
+```
+node --version                               (22.12+ em 22.x; ou 24.x; ou >=26)
+pnpm --version                               (11.11.0, campo packageManager)
+pnpm install --frozen-lockfile
+pnpm --filter web exec vitest --version      (vitest/5.0.3 ...)
+pnpm --filter web test                       (só existirá após o Bloco A)
+pnpm --filter web lint
+pnpm --filter web check-types
+pnpm --filter web build
+```
+
+Falha no Windows ⇒ o bloco não é entregue como concluído; a falha é reportada. **Windows, Node 20, Next 16 final e CI permanecem não verificados** até
+essas execuções.
+
+### Critérios verificáveis por comando (alvos) e evidências exigidas
+
+| Comando | Existe hoje? | Critério |
+|---|---|---|
+| `pnpm --filter web lint` | sim | exit 0, zero avisos |
+| `pnpm --filter web check-types` | sim | exit 0; inclui `vitest.config.ts` e `*.test.ts` |
+| `pnpm --filter web build` | sim | exit 0 |
+| `pnpm --filter web test` | **não — criado no Bloco A** | script presente; exit 0; `Test Files N passed` com N ≥ 1 e 0 failed; "No test files found" = falha |
+| Escopo | — | `git diff --name-only origin/main...HEAD` sem `apps/api/`, `turbo.json`, `package.json` (raiz), `.github/workflows/ci.yml`; `PROJECT_STATUS.md` só no encerramento |
+| Regressão da API (encerramento) | sim | `pnpm --filter api test`, `build`, `test:e2e`; `lint` usa `--fix` — conferir `git status` limpo; **não é executado nesta tarefa** |
+
+**Evidências exigidas por bloco:** saída dos comandos acima, contagem de testes, lista de critérios atendidos e dos **não verificados**, resultado do smoke
+(quando aplicável) e declaração do que **não** foi executado. O CI não executa o web (**[FATO-L]**): critérios verificados **localmente** (P9).
+
+## Matriz de critérios de aceite × testes (revisão 8)
+
+Todos os critérios são **[PROP]**; **nenhum foi executado**. U / I / M como acima. **Bloco**: A, B1 (sessão sem renovação), C (telas), B2 (renovação). "Arquivo" é previsão. A coluna **Não prova**
+lembra o limite do nível. Variantes `NN.1` existem quando o critério muda entre B1/C e B2.
+
+| AC | Bloco | Critério verificável | Nível | Arquivo | Não prova |
+|---|---|---|---|---|---|
+| 01 | A | `API_BASE_URL` ausente/inválida ⇒ falha fechada | U | `config.test.ts` | — |
+| 02 | A | `SESSION_COOKIE_MAX_AGE_SECONDS` ausente/não inteiro positivo ⇒ falha fechada; válido ⇒ usado nos cookies de sessão | U | `config.test.ts` | — |
+| 02.1 | A *(condicional: só se P1 e a inicialização via `instrumentation.ts` forem aprovadas)* | `loadConfig` é chamada em `register()` na inicialização; configuração inválida ⇒ falha fechada. Teste unitário da função; **se uma exceção em `register` impede a subida do servidor é HIP-23 (não verificada)** | U, M | `config.test.ts`; relatório | comportamento real do Next na subida |
+| 03 | A | `cos_access` (`Path=/`) e `cos_refresh` (`Path=/api/session`): `HttpOnly`, `SameSite=Lax`, sem `Domain`, `Max-Age` configurado; `Secure` só em production | U | `cookies.test.ts` | aceitação real pelo navegador |
+| 03.1 | B2 | `cos_renewed` (`Path=/`), `HttpOnly`, `SameSite=Lax`, `Max-Age` curto | U | `cookies.test.ts` | idem |
+| 04 | A | Remoção reemite `cos_access` e `cos_refresh` com o mesmo `Path`, `Max-Age=0`, valor vazio | U | `cookies.test.ts` | remoção efetiva no navegador (AC-44) |
+| 04.1 | B2 | A remoção inclui `cos_renewed` | U | `cookies.test.ts` | idem |
+| 05 | A | Parsing: sucesso `200/201`, erro (`message` string e array), `204`; corpo ilegível/forma inesperada ⇒ `unavailable`/ambíguo, sem expor o corpo | U | `envelope.test.ts` | — |
+| 06 | B1 | Login `200`: cookies gravados; redirect ao `next` válido ou `/projects` | U, I | `login.test.ts` | — |
+| 07 | B1 | Login `401` ⇒ "E-mail ou senha inválidos."; `400` ⇒ "Dados inválidos."; sem cookies | U, I | `login.test.ts` | — |
+| 08 | B1 | API indisponível no login (recusada/timeout/`5xx`) ⇒ "Serviço indisponível. Tente novamente.", sem cookies, e-mail preservado, senha não | I | `login.int.test.ts` | — |
+| 09 | A | `safe-next` rejeita `//x`, `/\x`, `https://x`, `javascript:`, controle, `/api/session/*`, `/session/*`, `/login`; aceita `/projects?page=2`; `reason`/`mode` só de lista fechada | U | `safe-next.test.ts` | — |
+| 10 | B1 | Modelo `continue-model` com `mode=end`: `mode` fora da lista ⇒ erro neutro; envio automático **único** | U | `continue-model.test.ts` | renderização real |
+| 10.1 | B2 | `continue-model` com `renew` (`next` inválido ⇒ `/projects`) e `unavailable` (**sem** envio automático) | U | `continue-model.test.ts` | idem |
+| 11 | B1, B2 | Página `continue` **sem efeitos** (revisão estática): `git grep -nE --untracked "cookies\(\|API_BASE_URL\|Set-Cookie" -- apps/web/app/session` sem ocorrências (comando **proposto**, não executado) | U (revisão) | relatório do bloco | execução real |
+| 12 | B1 | Handlers `end` e `logout` exportam **somente** `POST` | U | `routes.test.ts` | resposta do Next a métodos não exportados [HIP-11] (M: AC-42) |
+| 12.1 | B2 | Handler `renew` exporta **somente** `POST` | U | `routes.test.ts` | idem |
+| 13 | B2 | `POST renew` válido: **1** chamada à API; **`303`** (não `307`, F20) com `Location` = `next` validado; `Set-Cookie` dos três cookies conforme AC-03/03.1 com os **novos** tokens; `Cache-Control: no-store` | I | `renew.int.test.ts` | `Set-Cookie`/`303` no navegador (AC-44.1) |
+| 14 | B2 | `POST renew` sem `cos_refresh`: **0** chamadas à API; cookies removidos; `303` `/login?reason=session` | I | `renew.int.test.ts` | — |
+| 15.1 | A | **Origem válida:** `Origin` idêntico (forma canônica) à `APP_ORIGIN` normalizada ⇒ aceita (inclui `http://localhost:3000`) | U | `origin-check.test.ts` | que o navegador envie `Origin` (HIP-15) |
+| 15.2 | A | **Ausente:** sem `Origin` ⇒ recusa | U | `origin-check.test.ts` | — |
+| 15.3 | A | **Inválida/não interpretável:** `null`, vazio, texto livre, múltiplos valores, não canônica (path, barra final, userinfo, maiúsculas, espaços) ⇒ recusa | U | `origin-check.test.ts` | — |
+| 15.4 | A | **Divergente:** esquema (`http`×`https`), porta (`:3001`), host, subdomínio ⇒ recusa; porta padrão ≡ sem porta | U | `origin-check.test.ts` | — |
+| 15.5 | A | **Esquemas não-http(s)** (`file:`, `chrome-extension:`, `data:`; origem opaca `"null"`) ⇒ recusa | U | `origin-check.test.ts` | — |
+| 15.6 | A | `Host`, `X-Forwarded-Host`, `X-Forwarded-Proto`, `Forwarded` forjados ou coincidentes **não** alteram o resultado (decide só `APP_ORIGIN`) | U | `origin-check.test.ts` | **proxy real** (HIP-7): prova só que nosso código não os lê |
+| 15.7 | A | `APP_ORIGIN` ausente/inválida/não-http(s)/com path ⇒ falha fechada; nenhuma ação de sessão | U | `config.test.ts` | — |
+| 15.8 | B1 | Falha de origem em `end` e `logout`: `403`, **0** chamadas à API, **sem** `Set-Cookie` (nem de remoção, mesmo sem `cos_refresh`), `no-store`, log só com categoria; checagem **antes** de ler corpo/cookies | I | `origin.int.test.ts` | processamento real pelo Next |
+| 15.8.1 | B2 | Idem para `renew` | I | `origin.int.test.ts` | idem |
+| 15.9 | B1, B2 | Origem válida ⇒ fluxo normal segue (`end`/`logout` em B1; `renew` em B2) | I | `origin.int.test.ts` | — |
+| 15.10 | M (condicional a existir proxy reverso) | Atrás de proxy reverso real: `APP_ORIGIN` = origem pública; formulário funciona; `POST` de outra origem é recusado. **Sem ambiente de deploy: não verificável hoje** | M | relatório | — |
+| 15.11 | B1 | DevTools mostra `Origin` no `POST` do formulário same-origin; acesso por `127.0.0.1` (origem diferente da configurada) é recusado com `403` [HIP-15] | M | relatório | outros navegadores/extensões |
+| 16 | B2 | Preservação de destino: `next=/projects?page=2` chega intacto ao `Location` após a renovação | I | `renew.int.test.ts` | — |
+| 17 | B2 | **N — não enviada** (recusada, DNS, timeout de conexão): API simulada registra **0** requisições; cookies **mantidos**; `Location` `/session/continue?mode=unavailable&next=…` | I | `renew.int.test.ts` | `cause.code` do `fetch` real [HIP-5] |
+| 18 | B2 | **R — rejeição conclusiva** (`400/401/403/404` com corpo F8): cookies removidos; `/login?reason=session`; 1 requisição | I | `renew.int.test.ts` | — |
+| 19 | B2 | **A1 — `5xx`** (`500/502/503/504`, com e sem corpo F8): cookies removidos; `/login?reason=renewal`; **1** requisição, **sem** nova tentativa | I | `renew.int.test.ts` | posição real da falha em relação à rotação |
+| 20 | B2 | **A2 — timeout/soquete destruído após o envio:** cookies removidos; `/login?reason=renewal`; 1 requisição | I | `renew.int.test.ts` | idem |
+| 21 | B2 | **A3 — `2xx` ilegível/truncado/sem `refreshToken`:** cookies removidos; `/login?reason=renewal`; 1 requisição | I | `renew.int.test.ts` | idem |
+| 22 | B2 | **A4 — erro de rede não classificado** ⇒ ambíguo (cookies removidos; `renewal`) | U | `classify.test.ts` | — |
+| 23 | B2 | **Falha após possível rotação:** API simulada rotaciona e então falha (`500`/soquete destruído); o web remove cookies e **não** reapresenta o token antigo (0 segunda requisição) | I | `renew.int.test.ts` | que a API real rotacione antes de falhar |
+| 24 | B2 | **Duas renovações simultâneas** (3 `POST`, mesmo cookie, mesmo processo): **1** chamada à API; 3 respostas equivalentes | I | `renew.int.test.ts` | multi-processo/instância |
+| 25 | B2 | Entrada do single-flight removida após **sucesso e falha** | I | `single-flight.test.ts` | — |
+| 26 | B2 | **Chegada tardia:** `POST` sequencial com o cookie antigo ⇒ API simulada responde `401` e revoga a família ⇒ web remove cookies. **Documenta a limitação; não demonstra proteção** | I | `renew.int.test.ts` | que a API real se comporte assim (F2/F3 por leitura de código) |
+| 27 | B2 | **Anti-laço:** `401` **sem** `cos_renewed` ⇒ `mode=renew`; **com** `cos_renewed` ⇒ `mode=end` | U | `session.test.ts` | — |
+| 27.1 | B1, C | `401` ⇒ `mode=end` **sempre** (não existe renovação) | U | `session.test.ts` | — |
+| 28 | B2 | **Ciclo terminal:** modelo de estados puro (DAL + `renew` + `end`) com API que sempre devolve `401` em dados e `200` na renovação ⇒ no máximo **1** renovação e término em `/login` | U | `session-flow.test.ts` | laço real navegador↔Next |
+| 28.1 | B1, C | Modelo de estados: `401` ⇒ `end` ⇒ `/login`, **sem** laço possível | U | `session-flow.test.ts` | idem |
+| 29 | B1 | `POST end`: remove `cos_access` e `cos_refresh`, **0** chamadas à API, `303` `/login?reason=session` | I | `end.int.test.ts` | — |
+| 30 | B1 | Logout **L1, L4, L5, L6, L7′, L9** (ADR §7), parametrizado: registra **resultado observado**, **revogação remota** (`unconfirmed`/`not_revoked_by_call`/`unknown`/`not_attempted` — **nunca** "revogada"), cookies removidos, mensagem A/B; `303` `/login` | I | `logout.int.test.ts` | revogação real |
+| 30.1 | B2 | Logout **L2, L3, L7, L8** (envolvem renovação), incluindo `token_unusable` | I | `logout.int.test.ts` | idem |
+| 31 | B1 | Em **todos** os desfechos de logout de B1 há `Set-Cookie` de remoção de `cos_access` e `cos_refresh` com `Path` correto | I | `logout.int.test.ts` | remoção efetiva no navegador |
+| 31.1 | B2 | Idem, incluindo `cos_renewed` | I | `logout.int.test.ts` | idem |
+| 32 | A | Mensagens de lista fechada; nenhuma contém "revogad" nem "nada foi revogado"; nenhuma contém token, stack, `path` ou `message` crua da API | U | `messages.test.ts` | — |
+| 33 | B1 | Log de servidor (logout/`end`) registra observado/revogação/cookies **sem** tokens | U | `logout.test.ts` | — |
+| 34 | B1 | Proxy: sem `cos_access` ⇒ `/login?next=`; com cookie segue; matcher exclui `_next`, estáticos, `/login`, `/session/*`, `/api/session/*` [HIP-9] | U | `proxy.test.ts` | execução pelo Next |
+| 34.1 | B1 | Cookie `cos_access` **presente porém inválido/obsoleto/forjado**: o Proxy **não** bloqueia a navegação; a API simulada responde `401`; o DAL encaminha a `mode=end`; cookies removidos; **a presença do cookie não é tratada como sessão válida** | I | `session.int.test.ts` | Proxy executado pelo Next |
+| 35 | A | DAL: `2xx/401/403/404/400/5xx/rede/timeout/corpo inválido` ⇒ classificação da ADR §3; sempre `Bearer`, `cache: 'no-store'`, timeout; `403` e `5xx` **não** removem cookies nem renovam | U, I | `api-client.test.ts`, `api-client.int.test.ts` | — |
+| 36 | A, B1, C, B2 | Nenhum arquivo fora de `config.ts`/`api-client.ts` acessa a API: `git grep -nE --untracked "API_BASE_URL" -- apps/web` lista só esses (comando **proposto**, não executado) | U (revisão) | relatório do bloco | — |
+| 37 | C | `/v1/users/me`: `5xx`/rede ⇒ página renderiza sem nome + aviso; `401` ⇒ `end` | I | `session.int.test.ts` | renderização real |
+| 37.1 | B2 | `401` em `/v1/users/me` ⇒ etapa de renovação | I | `session.int.test.ts` | idem |
+| 38 | C | Listar Projects: `401` ⇒ `end`; `403` ⇒ "sem permissão"; `5xx`/rede/corpo inválido ⇒ mensagem + tentar de novo, sem lista parcial | I | `projects.int.test.ts` | idem |
+| 38.1 | B2 | `401` ⇒ etapa de renovação | I | `projects.int.test.ts` | idem |
+| 39 | C | Criar Project: `201` ⇒ aparece na lista; `400` ⇒ erros por campo, valores preservados; `401` ⇒ `session-expired` com URL da etapa (`end`); `5xx`/rede ⇒ mensagem genérica, formulário preservado | I | `projects.int.test.ts` | idem |
+| 40 | B1 | `/login?reason=session` exibe texto neutro; valores fora da lista ignorados | U | `messages.test.ts` | — |
+| 40.1 | B2 | `reason=renewal` exibe texto distinto e neutro | U | `messages.test.ts` | — |
+| 41 | B1 | Smoke: `GET /session/continue?mode=end` **sem** `Set-Cookie` e **sem** chamada à API (log da API); envio automático **uma vez** (dev e produção); sem JavaScript o botão funciona [HIP-13] | M | relatório | — |
+| 41.1 | B2 | Idem para `mode=renew` | M | relatório | — |
+| 42 | B1 | Smoke: `end` e `logout` são **`POST` → `303`** → destino em `GET` (DevTools); `GET` nesses caminhos não altera cookies nem chama a API [HIP-11] | M | relatório | — |
+| 42.1 | B2 | Idem para `renew` | M | relatório | — |
+| 43 | B2 | Smoke de concorrência: 2–3 abas com access expirado — **registrar** o resultado (renovações no log da API; algum `401` de reuso; login forçado). **Sem a estratégia aprovada não é critério de aprovação** | M | relatório | — |
+| 43.1 | B2, condicional a O2 | 2–3 abas retomadas ao mesmo tempo: **uma renovação por vez**, nenhum `401` de reuso, nenhuma revogação global, em cada navegador-alvo; registrar à parte o caso sem JavaScript/sem `navigator.locks` [HIP-17, HIP-18] | M | relatório | outros navegadores/versões |
+| 43.2 | B2, condicional a O2 | O bloqueio é liberado em `pagehide`, no limite de retenção e na espera esgotada (⇒ `unavailable`, cookies intactos) [HIP-18, HIP-20] | M | relatório | — |
+| 43.3 | B2, condicional a O2 | `lock-policy`: com `navigator.locks` **simulado**, adquirir → enviar → manter até `pagehide`; espera esgotada ⇒ `unavailable`; sem a API ⇒ segue sem bloqueio | U | `lock-policy.test.ts` | **que a Web Locks API real se comporte como o simulado** |
+| 44 | B1 | Smoke de cookies: atributos corretos no DevTools; após logout/`end` **ausentes** (mesmo `Path`); Voltar não mostra conteúdo autenticado [HIP-3, HIP-6] | M | relatório | — |
+| 44.1 | B2 | Após a renovação os três cookies são regravados | M | relatório | — |
+| 45 | A | `pnpm --filter web test` conforme tabela de comandos (script presente, N ≥ 1, 0 failed) | — | Bloco A | — |
+| 46 | A, B1, C, B2 | `lint`, `check-types`, `build` conforme tabela de comandos | — | todos os blocos | Windows até execução |
+| 47 | A, B1, C, B2 | Escopo: nenhum arquivo proibido alterado (comando da tabela) | — | todos os blocos | — |
+
+### Smoke manual (M) contra a API real — checklist (Windows, PowerShell; comandos **propostos**, **não executados**)
+
+Pré-requisitos informados/lidos (ADR F24/F25): Docker Compose em `.\docker\docker-compose.yml` (serviço `postgres`, porta `5432`);
+`.env` da API a partir de `.env.example` (`JWT_SECRET` precisa de valor; `PORT=3001`); variáveis do web (propostas):
+`API_BASE_URL=http://localhost:3001`, `APP_ORIGIN=http://localhost:3000`, `SESSION_COOKIE_MAX_AGE_SECONDS` ≤ `JWT_REFRESH_TTL`
+do ambiente do smoke. Sequência (comandos existentes: Compose [sintaxe v2 do `docker compose`, **HIP-22: não verificada** na máquina
+do Arquiteto-Chefe] e scripts de `ci.yml`/`package.json`):
+
+```
+docker compose -f .\docker\docker-compose.yml up -d
+pnpm install --frozen-lockfile
+pnpm --filter api exec prisma generate
+pnpm --filter api exec prisma migrate deploy
+pnpm --filter api start:dev
+pnpm --filter web dev
+```
+
+(`db:migrate` na raiz é `prisma migrate dev`; o CI usa `migrate deploy`. `pnpm test:e2e` na raiz **não existe**.)
+
+- **B1/C:** login válido e inválido; criar/listar Projects; AC-41, 42, 44, 15.11; expirar o access (`JWT_ACCESS_TTL` curto na API)
+  e confirmar `401` ⇒ `end` ⇒ login; parar a API (`docker compose … stop` ou parar `start:dev`) e ver login, listagem e logout em
+  indisponibilidade; `next start` sobre `http://localhost` com `NODE_ENV=production` (cookie `Secure`, [HIP-6]).
+- **B2 (somente após decisão):** AC-41.1, 42.1, 43, 44.1 e, se O2, 43.1/43.2. Use `JWT_ACCESS_TTL` **≥ 2 min** (o marcador
+  `cos_renewed` dura ~30 s [HIP-12]; TTL menor geraria falso "laço").
+- Os cenários **ambíguos** não são reproduzíveis na API real e ficam só nos testes I.
+
+## Divisão em blocos e governança — [PROP][PEND] (O7)
+
+**Sequência proposta (não aprovada): Bloco A → Bloco B1 → Bloco C → Bloco B2.** Sem O7: A → B (= B1 + B2, **[BLQ-IMPL]** por P2/P11) → C.
+
+- **Bloco A:** fundação do frontend, configuração, testes e mecanismos básicos de sessão (cookies, origem, DAL), conforme o escopo que vier a ser aprovado.
+- **Bloco B1:** fluxo de sessão **sem renovação automática**; inclui **apenas o subconjunto `end`** do comportamento de continuação de sessão
+  (login, `proxy.ts`, `continue` modo `end`, `POST end`, `POST logout` sem renovação, `401` ⇒ `end`).
+- **Bloco C:** integração dos mecanismos de autorização e acesso a dados (`/projects`, criação, `/users/me`, estados), condicionada à conclusão e aprovação
+  de A e B1.
+- **Bloco B2:** renovação (`renew`, `cos_renewed`, classificação de falhas ambíguas) e mitigação da concorrência, condicionada às decisões de segurança
+  pendentes.
+
+**Fluxo de entrega [INFO]:** `main` protegida; toda mudança futura por **branch → PR → merge**; patches `.patch` em `C:\Users\marceloferreira\Downloads`,
+aplicados pelo Arquiteto-Chefe; validação de patch contra clone limpo no commit-base. Branches: `feature/<nome>` e `docs/<nome>` conforme `CONTRIBUTING.md`
+e o histórico. **Nenhum patch, branch, commit ou PR foi criado em decorrência desta revisão em arquivo do projeto** (o patch documental da revisão 8 é
+**externo ao repositório**; ver relatório).
+
+### Gates de autorização (todos **PENDENTES**; nenhum bloco está autorizado)
+
+- **Baseline/Design Freeze:** somente após **aprovação explícita** dos documentos e **merge do PR exclusivamente documental**. **Não declarado.**
+- **Bloco A:** depende da aprovação da baseline, de **P1, P3, P5 e P12**, além da **confirmação de P7/P8/P9 fora do escopo** desta sprint.
+- **Bloco B1:** depende da **conclusão e aprovação de A**, da **decisão O7** e da **aprovação de P10 para o subconjunto `end`**.
+- **Bloco C:** depende da **conclusão e aprovação de A e B1**.
+- **Bloco B2:** depende da **aprovação de B1**, da **decisão P2**, da **política de renovação de P10** e da **decisão P11**; **se O2 for adotada**, exige também
+  **smoke tests de navegador para HIP-17/HIP-18**; **se E-A for adotada**, exige a **correção prévia da API** e a **reavaliação de P11**.
+- **Implantação além de uso individual/desenvolvimento:** depende das **condições comuns** de segurança e operação (ADR §5.7) e da **resolução de O1b** ou de
+  **aceite explícito, informado e documentado** do risco residual.
+
+Cada bloco, futuramente, exige **branch e PR próprios, validação documentada e aprovação explícita antes de avançar ao seguinte**. As decisões P1–P12 e O7 estão
+na matriz do relatório de revisão 8; **recomendação técnica não é decisão aprovada**.
+
+## Riscos
+
+Classificados em **segurança × operação**, com [BLQ-IMPL]/[BLQ-DEPL], na ADR-014 ("Estado de decisões, riscos e gates"): RA-1 a RA-16.
+
+## Fora de escopo (explicitamente, nesta sprint)
+
+`apps/api` (O1a/O1b, rotação atômica, tolerância/idempotência, expiração do refresh na resposta); `turbo.json`, `package.json` raiz, `.github/workflows/ci.yml`;
+`PROJECT_STATUS.md` até o encerramento; Playwright, Testing Library; cache pós-conclusão de tokens; sessão no servidor com armazenamento compartilhado (O3);
+rate limiting; deploy/proxy reverso (`serverActions.allowedOrigins`).
+
+## Estado de aprovação
+
+**NÃO APROVADO.** **Design Freeze não declarado** (o bloco `DESIGN FREEZE — SPR-015` só existirá, no padrão das SPR anteriores, **depois** da aprovação
+explícita e do merge do PR documental).
