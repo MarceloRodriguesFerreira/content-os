@@ -1,22 +1,24 @@
 # SPR-015 — Frontend Foundation (Design Doc)
 
-Status: **PROPOSTA — NÃO APROVADA** (`Proposed`) — revisão 8. A revisão 7 foi avaliada pelo Arquiteto-Chefe e **não foi aprovada como
-baseline**. **Design Freeze: não declarado.** **Nenhum bloco está autorizado.** Documento destinado a
-`engineering/designs/SPR-015-frontend-foundation.md`; **não está em `main`**.
+Status: `Proposed` (status de arquivo) — revisão 8, **integrada à `main`** pelo PR #33 (merge `e4f2aa5`) e reconciliada em 14/10/2026. **Aprovação da revisão 8 como
+baseline: não registrada (PENDENTE). Design Freeze: não declarado.** **Nenhum bloco está autorizado**; a autorização formal do Bloco A depende de auditoria e de
+decisão explícita do Arquiteto-Chefe. **Decisões individuais aprovadas: P1, P3, P5 e P12**; P7, P8 e P9 confirmadas fora do escopo do Bloco A (fonte: instruções do
+Arquiteto-Chefe de 14/10/2026, não versionadas no repositório). A tabela completa de estados está na ADR-014 ("Estado das decisões"). Aprovação de decisão individual,
+aprovação da revisão 8, integração na `main`, autorização do Bloco A e aprovação do resultado do Bloco A são **estados distintos**.
 
-Decisões de arquitetura: `engineering/adr/ADR-014-frontend-authentication-and-session.md` (também **proposta, não aprovada**) — contém a legenda
+Decisões de arquitetura: `engineering/adr/ADR-014-frontend-authentication-and-session.md` (mesmo estado documental; ver Status) — contém a legenda
 de estados, os fatos F1–F27, as hipóteses HIP-1…24, os riscos RA-* e a comparação P2. Backlog: `engineering/backlog/SPR-015.md` (proposta).
 
 **Legenda (idêntica à da ADR):** **[FATO-L]** verificado por leitura · **[FATO-E]** verificado por execução · **[INFO]** informado, não verificado ·
-**[HIP-n]** hipótese · **[PROP]** proposta técnica do Claude · **[PEND]** aguarda o Arquiteto-Chefe · **[APROV]** aprovada (**nenhuma**) ·
-**[BLQ-IMPL]** bloqueia implementação · **[BLQ-DEPL]** bloqueia implantação. Toda decisão deste documento é **[PROP][PEND]**.
+**[HIP-n]** hipótese · **[PROP]** proposta técnica do Claude · **[PEND]** aguarda o Arquiteto-Chefe · **[APROV]** aprovada (**P1, P3, P5, P12**) ·
+**[BLQ-IMPL]** bloqueia implementação · **[BLQ-DEPL]** bloqueia implantação. Toda decisão deste documento é **[PROP][PEND]**, exceto P1, P3, P5 e P12 (**[APROV]**, regra central).
 
 ## Contexto
 
 `apps/web` é o scaffold do `create-next-app` (`app/layout.tsx`, `app/page.tsx`, CSS padrão); sem `proxy`, sem env, sem script `test` **[FATO-L]**.
 `PROJECT_STATUS.md` afirma "Frontend ✅ Operacional" — **divergente** da realidade; este documento descreve o estado real e **não corrige**
-`PROJECT_STATUS.md` (P7). `ADR-014` e documentos da SPR-015 **não existiam em `main`** (revisão 8: `main` = `3480229`, sem commits novos, clone sem
-alterações) **[FATO-L]**. A revisão 2 reescreveu uma versão anterior indisponível; as revisões 3 a 8 derivam da anterior; **não há evidência** de
+`PROJECT_STATUS.md` (P7). `ADR-014` e documentos da SPR-015 **não existiam em `main`** à época da revisão 8 (`main` = `3480229`) **[FATO-L]**; **passaram a existir** com o merge do PR #33
+(`e4f2aa5`, revalidado em 14/10/2026) **[FATO-L]**. A revisão 2 reescreveu uma versão anterior indisponível; as revisões 3 a 8 derivam da anterior; **não há evidência** de
 que decisões anteriores à revisão 2 tenham sido preservadas. **Nenhum código e nenhum teste foram executados na revisão 8.**
 
 **Contexto de execução — [INFO], não verificado:** ambiente **Windows**; `main` **protegida** (branch → PR → merge); patches em
@@ -73,13 +75,17 @@ O Proxy verifica **só a presença** de `cos_access` (navegação otimista); **n
 tocar cookies. Detalhes e limites do Proxy: ADR §3. Validação de origem dos `POST` de sessão: ADR §8. **Fronteiras** (navegador, Proxy, servidor
 Next, DAL, API): ADR §1 — a API **não** é alterada.
 
-## Configuração — [PROP][PEND] (P1, P12)
+## Configuração — P1 e P12 [APROV] (regra central); detalhamento [PROP]
 
 | Variável (nome proposto) | Regra |
 |---|---|
 | `API_BASE_URL` | obrigatória, sem padrão, só servidor; URL absoluta `http`/`https` sem credenciais; exemplo local em `.env.example` |
 | `SESSION_COOKIE_MAX_AGE_SECONDS` | obrigatória, sem padrão silencioso, inteiro positivo; **operacionalmente não superior** ao `JWT_REFRESH_TTL` **efetivo** da API do mesmo ambiente (conferência humana registrada; os defaults `15m`/`7d` **não** são presumidos como efetivos — ADR F7) |
 | `APP_ORIGIN` | obrigatória, sem padrão, só servidor; origem `http`/`https` pura (sem path/query/userinfo) = origem **pública** vista pelo navegador; usada na validação de origem dos `POST` de sessão (ADR §8); exemplo local `http://localhost:3000` |
+
+**Aprovado:** P1 — `SESSION_COOKIE_MAX_AGE_SECONDS` obrigatória, sem fallback silencioso, não superior ao TTL efetivo do refresh token da API; P12 — `APP_ORIGIN` como origem canônica e validação estrita de `Origin` antes de ler body, tocar cookies ou chamar a API, sem substituição por `Host`/`X-Forwarded-*`. O restante desta seção (`instrumentation.ts`, formato de erro, estrutura) segue **[PROP][PEND]**.
+
+**Nota de TTL (reconciliação de 14/10/2026).** **[FATO-L]** `apps/api/src/config/configuration.ts` define `refreshTtl: process.env.JWT_REFRESH_TTL ?? '7d'`; `AuthService.calculateRefreshExpiry()` calcula a expiração persistida do refresh token a partir desse valor, via `parseTtlToMs`, que aceita `ms`, `s`, `m`, `h` e `d` e lança erro quando o formato não corresponde; `env.validation.ts` exige apenas que `JWT_REFRESH_TTL` seja string não vazia, **sem validar o formato da duração no bootstrap** (o formato inválido só é detectado quando o parser executa). **[INFO]** (saída de PowerShell fornecida pelo responsável técnico; `apps/api/.env` é ignorado pelo Git e **não** foi lido nesta reconciliação): o `.env` local tinha `JWT_REFRESH_TTL=7d`, equivalente a **604.800 segundos** — referência compatível para o ambiente local naquele momento. Isso **não** prova o valor efetivo de staging/produção nem exclui sobrescrita por variável de ambiente externa: a configuração dos demais ambientes **ainda precisa ser confirmada antes da implantação**. `SESSION_COOKIE_MAX_AGE_SECONDS` é obrigatório e **não pode exceder** o TTL efetivo do refresh token do ambiente correspondente; `604800` **não** é garantia universal. Nenhuma alteração em `apps/api` (inclusive no parser ou na validação de ambiente) é feita ou autorizada por esta reconciliação.
 
 **Validação:** função pura `loadConfig` na primeira utilização; **se aprovado e verificado**, também na inicialização via `instrumentation.ts` (`register`
 roda uma vez antes de o servidor atender — **[FATO-L]**; se uma exceção ali impede a subida é **HIP-23**). Valor ausente/inválido ⇒ falha fechada
@@ -116,7 +122,7 @@ Normativos na ADR-014: cookies e configuração (§2), Proxy e DAL (§3), `end`/
 logout com quatro dimensões e revogação **nunca afirmada** (§7), origem (§8). Login: Server Action valida campos → `POST /v1/auth/login` → grava
 `cos_access` (`Path=/`) e `cos_refresh` (`Path=/api/session`) com o `Max-Age` configurado → redireciona ao `next` validado ou a `/projects`.
 
-## Estratégia de testes — [PROP][PEND] (P3, P5)
+## Estratégia de testes — P3 e P5 [APROV] (regra central); detalhamento [PROP]
 
 ### Níveis
 
@@ -165,17 +171,17 @@ O monorepo roda checagens por pacote com `pnpm --filter <pkg> <script>` (CI e `E
 existe** e sai com exit 0 sem saída (falso verde **[FATO-E]**): por isso o critério exige **contagem de testes**. **`pnpm test:e2e` na raiz não é um comando
 válido**; o `test:e2e` oficial é `pnpm --filter api test:e2e` (a raiz tem o alias `pnpm api …`, **não executado**).
 
-### Compatibilidade — P3 [PROP][PEND]
+### Compatibilidade — P3 [APROV]
 
 | Item | Exigência | Estado |
 |---|---|---|
 | Vitest 5.0.3 (proposto) | Node `^22.12 \|\| ^24 \|\| >=26` (23.x e 25.x **não**) | **[FATO-L]** (registro npm); executado só em Node 22 sobre o scaffold **[FATO-E]** |
-| Vitest 4.1.11 (alternativa) | Node `^20 \|\| ^22 \|\| >=24` | **[FATO-L]**; executado só em Node 22 **[FATO-E]** |
+| Vitest 4.1.11 (alternativa; **não adotada** — P3 aprova `^5.0.3`) | Node `^20 \|\| ^22 \|\| >=24` | **[FATO-L]**; executado só em Node 22 **[FATO-E]** |
 | Next 16.2.0 | Node `>=20.9.0` | **[FATO-L]** |
 | CI atual | Node 22 | **[FATO-L]** |
 | Raiz `engines.node` | `>=18` — conflita com Next 16.2.0 e Vitest | **[FATO-L]**; documentado, **sem alterar** `package.json` (P8) |
 
-**Proposta:** Node 22 (**versão mínima 22.12**) + Vitest 5.0.3. Ambiente abaixo disso impede iniciar o Bloco A (pré-requisito técnico). Verificação no
+**Aprovado (P3):** Node 22 (**versão mínima 22.12**) + Vitest `^5.0.3`; `engines` do monorepo **não** é alterado (P8). Ambiente abaixo disso impede iniciar o Bloco A (pré-requisito técnico). Verificação no
 Windows (PowerShell/cmd), a registrar no relatório do Bloco A — **comandos propostos, não executados**:
 
 ```
@@ -331,22 +337,19 @@ pnpm --filter web dev
 
 **Fluxo de entrega [INFO]:** `main` protegida; toda mudança futura por **branch → PR → merge**; patches `.patch` em `C:\Users\marceloferreira\Downloads`,
 aplicados pelo Arquiteto-Chefe; validação de patch contra clone limpo no commit-base. Branches: `feature/<nome>` e `docs/<nome>` conforme `CONTRIBUTING.md`
-e o histórico. **Nenhum patch, branch, commit ou PR foi criado em decorrência desta revisão em arquivo do projeto** (o patch documental da revisão 8 é
-**externo ao repositório**; ver relatório).
+e o histórico. O conteúdo documental da revisão 8 foi integrado à `main` pelo PR #33 (`e4f2aa5`).
 
-### Gates de autorização (todos **PENDENTES**; nenhum bloco está autorizado)
+### Gates de autorização (nenhum bloco está autorizado)
 
-- **Baseline/Design Freeze:** somente após **aprovação explícita** dos documentos e **merge do PR exclusivamente documental**. **Não declarado.**
-- **Bloco A:** depende da aprovação da baseline, de **P1, P3, P5 e P12**, além da **confirmação de P7/P8/P9 fora do escopo** desta sprint.
+- **Baseline/Design Freeze:** o **merge do PR exclusivamente documental ocorreu** (PR #33, `e4f2aa5`; **[FATO-L]**, revalidado em 14/10/2026). A **aprovação explícita dos documentos como baseline pelo Arquiteto-Chefe não está registrada ⇒ PENDENTE.** **Design Freeze não declarado.**
+- **Bloco A:** **P1, P3, P5 e P12 aprovadas** e **P7/P8/P9 confirmadas fora do escopo** (registro nas instruções do Arquiteto-Chefe de 14/10/2026, não versionado no repositório). **PENDENTES:** aprovação da baseline e **autorização formal do Arquiteto-Chefe** para iniciar o bloco, após auditoria. A verificação de Node (≥ 22.12) e `pnpm` 11.11.0 no Windows continua a registrar no relatório de A. TTL: referência local `7d` (604.800 s) registrada como **[INFO]**; demais ambientes a confirmar antes da implantação (ver nota de TTL).
 - **Bloco B1:** depende da **conclusão e aprovação de A**, da **decisão O7** e da **aprovação de P10 para o subconjunto `end`**.
 - **Bloco C:** depende da **conclusão e aprovação de A e B1**.
-- **Bloco B2:** depende da **aprovação de B1**, da **decisão P2**, da **política de renovação de P10** e da **decisão P11**; **se O2 for adotada**, exige também
-  **smoke tests de navegador para HIP-17/HIP-18**; **se E-A for adotada**, exige a **correção prévia da API** e a **reavaliação de P11**.
-- **Implantação além de uso individual/desenvolvimento:** depende das **condições comuns** de segurança e operação (ADR §5.7) e da **resolução de O1b** ou de
-  **aceite explícito, informado e documentado** do risco residual.
+- **Bloco B2:** depende da **aprovação de B1**, da **decisão P2**, da **política de renovação de P10** e da **decisão P11**; **se O2 for adotada**, exige também **smoke tests de navegador para HIP-17/HIP-18**; **se E-A for adotada**, exige a **correção prévia da API** e a **reavaliação de P11**.
+- **Implantação além de uso individual/desenvolvimento:** depende das **condições comuns** de segurança e operação (ADR §5.7) e da **resolução de O1b** ou de **aceite explícito, informado e documentado** do risco residual. P9 (CI do frontend, fora desta sprint) **bloqueia a prontidão para produção**.
 
-Cada bloco, futuramente, exige **branch e PR próprios, validação documentada e aprovação explícita antes de avançar ao seguinte**. As decisões P1–P12 e O7 estão
-na matriz do relatório de revisão 8; **recomendação técnica não é decisão aprovada**.
+Cada bloco, futuramente, exige **branch e PR próprios, validação documentada e aprovação explícita antes de avançar ao seguinte**. O estado de cada decisão P1–P12 e de O7 está
+na ADR-014 ("Estado das decisões"); P2, P4, P6, P10 e P11 e O7 **permanecem pendentes**; **recomendação técnica não é decisão aprovada**.
 
 ## Riscos
 
@@ -360,5 +363,6 @@ rate limiting; deploy/proxy reverso (`serverActions.allowedOrigins`).
 
 ## Estado de aprovação
 
-**NÃO APROVADO.** **Design Freeze não declarado** (o bloco `DESIGN FREEZE — SPR-015` só existirá, no padrão das SPR anteriores, **depois** da aprovação
-explícita e do merge do PR documental).
+**Decisões individuais:** P1, P3, P5 e P12 aprovadas; P7, P8 e P9 confirmadas fora do escopo do Bloco A; demais pendentes (ver ADR-014).
+**Revisão 8 como baseline: aprovação não registrada.** **Design Freeze não declarado** (o bloco `DESIGN FREEZE — SPR-015` só existirá, no padrão das SPR anteriores, **depois**
+da aprovação explícita da baseline pelo Arquiteto-Chefe; o merge do PR documental já ocorreu e **não** substitui essa aprovação). **Autorização do Bloco A: não concedida.**
