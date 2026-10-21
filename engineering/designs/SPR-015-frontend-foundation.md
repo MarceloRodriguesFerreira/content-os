@@ -366,3 +366,17 @@ rate limiting; deploy/proxy reverso (`serverActions.allowedOrigins`).
 **Decisões individuais:** P1, P3, P5 e P12 aprovadas; P7, P8 e P9 confirmadas fora do escopo do Bloco A; demais pendentes (ver ADR-014).
 **Revisão 8 como baseline: aprovação não registrada.** **Design Freeze não declarado** (o bloco `DESIGN FREEZE — SPR-015` só existirá, no padrão das SPR anteriores, **depois**
 da aprovação explícita da baseline pelo Arquiteto-Chefe; o merge do PR documental já ocorreu e **não** substitui essa aprovação). **Autorização do Bloco A: não concedida.**
+
+### Evidência de CI — SPR-015 Bloco A
+
+- **PR:** #35 — SPR-015 Bloco A: fundação frontend
+- **Workflow:** `ci.yml`
+- **Execução:** #48
+- **Job:** `Lint, Test, Build, E2E`
+- **Resultado:** Success
+- **Duração total exibida:** 1 min 25 s
+- **Evidência:** tela do GitHub Actions fornecida em 21/10/2026.
+- **Avisos:** depreciação do Node.js 20 nas Actions e migração futura do `ubuntu-latest` para Ubuntu 26.
+- **Conclusão:** o CI associado ao PR #35 foi concluído com sucesso.
+
+**Limitação:** essa evidência comprova a execução bem-sucedida do CI do PR. Isoladamente, não comprova que os testes foram executados novamente após o merge no `main` nem identifica a revisão exata testada.
