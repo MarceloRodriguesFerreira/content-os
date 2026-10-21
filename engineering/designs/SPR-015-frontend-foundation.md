@@ -1,10 +1,16 @@
 # SPR-015 — Frontend Foundation (Design Doc)
 
 Status: `Proposed` (status de arquivo) — revisão 8, **integrada à `main`** pelo PR #33 (merge `e4f2aa5`) e reconciliada em 14/10/2026. **Aprovação da revisão 8 como
-baseline: não registrada (PENDENTE). Design Freeze: não declarado.** **Nenhum bloco está autorizado**; a autorização formal do Bloco A depende de auditoria e de
-decisão explícita do Arquiteto-Chefe. **Decisões individuais aprovadas: P1, P3, P5 e P12**; P7, P8 e P9 confirmadas fora do escopo do Bloco A (fonte: instruções do
+baseline: não registrada (PENDENTE). Design Freeze: não declarado.** **Em 14/10/2026 nenhum bloco estava autorizado** (histórico; ver estado vigente abaixo); a autorização formal do Bloco A dependia de auditoria e de
+decisão explícita do Arquiteto-Chefe. **Decisões individuais aprovadas em 14/10/2026: P1, P3, P5 e P12** (O7 e P10 `end` em 21/10/2026); P7, P8 e P9 confirmadas fora do escopo do Bloco A (fonte: instruções do
 Arquiteto-Chefe de 14/10/2026, não versionadas no repositório). A tabela completa de estados está na ADR-014 ("Estado das decisões"). Aprovação de decisão individual,
 aprovação da revisão 8, integração na `main`, autorização do Bloco A e aprovação do resultado do Bloco A são **estados distintos**.
+
+> **Estado vigente em 21/10/2026** (data do **registro**; a **data original** das decisões é **desconhecida**; fonte: instruções do Arquiteto-Chefe, não versionadas). O texto acima e as seções marcadas
+> "histórico" descrevem 14/10/2026; **onde divergem, vale este bloco**. **Bloco A:** concluído, integrado (PR #35, `fe58c24`, **[FATO-L]**) e com **resultado técnico aprovado** pelo Arquiteto-Chefe com base em execução
+> **local relatada** em 21/10/2026 (183 testes aprovados; lint sem erros exibidos; `check-types` com saída 0; build bem-sucedido), **não** CI pós-merge. **O7 aprovada; P10 aprovada só para `end`.** **Bloco B1:** autorizado de
+> forma condicionada (pré-condições na ADR-014); código não iniciado. **B2:** bloqueado, fora do B1. **P2, P4, P6 e P11:** pendentes. **Aprovação da revisão 8 como baseline: PENDENTE; Design Freeze: não declarado** (a revisão 8 é
+> a referência técnica para o B1, sem aprovação automática como baseline). Registro completo: seção "Registro de decisões posteriores à revisão 8" da ADR-014.
 
 Decisões de arquitetura: `engineering/adr/ADR-014-frontend-authentication-and-session.md` (mesmo estado documental; ver Status) — contém a legenda
 de estados, os fatos F1–F27, as hipóteses HIP-1…24, os riscos RA-* e a comparação P2. Backlog: `engineering/backlog/SPR-015.md` (proposta).
@@ -167,8 +173,8 @@ pós-rotação**; exceção em `register()`; CI (não executa o web).
 
 O monorepo roda checagens por pacote com `pnpm --filter <pkg> <script>` (CI e `ENGINEERING_GUIDE.md`) **[FATO-L]**; `turbo.json` e a raiz não têm
 `test`. **Proposta:** o **Bloco A** adiciona a `apps/web/package.json` a devDependency `vitest` (`^5.0.3`, travada pelo `pnpm-lock.yaml`) e o script
-`"test": "vitest run"`, mais `vitest.config.ts`; **nada da raiz ou do Turborepo é tocado**. **Até o Bloco A (se autorizado), `pnpm --filter web test` não
-existe** e sai com exit 0 sem saída (falso verde **[FATO-E]**): por isso o critério exige **contagem de testes**. **`pnpm test:e2e` na raiz não é um comando
+`"test": "vitest run"`, mais `vitest.config.ts`; **nada da raiz ou do Turborepo é tocado**. **Antes do Bloco A (estado em 14/10/2026), `pnpm --filter web test` não
+existia** e saía com exit 0 sem saída (falso verde **[FATO-E]**; o script passou a existir com o merge da PR #35, **[FATO-L]**): por isso o critério exige **contagem de testes**. **`pnpm test:e2e` na raiz não é um comando
 válido**; o `test:e2e` oficial é `pnpm --filter api test:e2e` (a raiz tem o alias `pnpm api …`, **não executado**).
 
 ### Compatibilidade — P3 [APROV]
@@ -205,7 +211,7 @@ essas execuções.
 | `pnpm --filter web lint` | sim | exit 0, zero avisos |
 | `pnpm --filter web check-types` | sim | exit 0; inclui `vitest.config.ts` e `*.test.ts` |
 | `pnpm --filter web build` | sim | exit 0 |
-| `pnpm --filter web test` | **não — criado no Bloco A** | script presente; exit 0; `Test Files N passed` com N ≥ 1 e 0 failed; "No test files found" = falha |
+| `pnpm --filter web test` | **não em 14/10/2026 — criado no Bloco A** (existe desde a PR #35, **[FATO-L]**) | script presente; exit 0; `Test Files N passed` com N ≥ 1 e 0 failed; "No test files found" = falha |
 | Escopo | — | `git diff --name-only origin/main...HEAD` sem `apps/api/`, `turbo.json`, `package.json` (raiz), `.github/workflows/ci.yml`; `PROJECT_STATUS.md` só no encerramento |
 | Regressão da API (encerramento) | sim | `pnpm --filter api test`, `build`, `test:e2e`; `lint` usa `--fix` — conferir `git status` limpo; **não é executado nesta tarefa** |
 
@@ -323,9 +329,9 @@ pnpm --filter web dev
   `cos_renewed` dura ~30 s [HIP-12]; TTL menor geraria falso "laço").
 - Os cenários **ambíguos** não são reproduzíveis na API real e ficam só nos testes I.
 
-## Divisão em blocos e governança — [PROP][PEND] (O7)
+## Divisão em blocos e governança — [PROP][PEND] na revisão 8 (O7 aprovada em 21/10/2026)
 
-**Sequência proposta (não aprovada): Bloco A → Bloco B1 → Bloco C → Bloco B2.** Sem O7: A → B (= B1 + B2, **[BLQ-IMPL]** por P2/P11) → C.
+**Sequência: Bloco A → Bloco B1 → Bloco C → Bloco B2** (proposta na revisão 8; **aprovada em 21/10/2026** com O7). A alternativa sem O7 (A → B = B1 + B2, **[BLQ-IMPL]** por P2/P11 → C) **não foi adotada**.
 
 - **Bloco A:** fundação do frontend, configuração, testes e mecanismos básicos de sessão (cookies, origem, DAL), conforme o escopo que vier a ser aprovado.
 - **Bloco B1:** fluxo de sessão **sem renovação automática**; inclui **apenas o subconjunto `end`** do comportamento de continuação de sessão
@@ -339,17 +345,20 @@ pnpm --filter web dev
 aplicados pelo Arquiteto-Chefe; validação de patch contra clone limpo no commit-base. Branches: `feature/<nome>` e `docs/<nome>` conforme `CONTRIBUTING.md`
 e o histórico. O conteúdo documental da revisão 8 foi integrado à `main` pelo PR #33 (`e4f2aa5`).
 
-### Gates de autorização (nenhum bloco está autorizado)
+### Gates de autorização — estado em 14/10/2026 (HISTÓRICO)
+
+> **Gates vigentes em 21/10/2026.** Baseline/Design Freeze: **PENDENTE / não declarado.** **Bloco A:** concluído, integrado e com resultado técnico aprovado. **Bloco B1:** autorizado de forma condicionada (O7 e P10 `end`
+> aprovadas). **Bloco C:** depende de B1 aprovado. **Bloco B2:** **bloqueado**. Os itens abaixo são o texto de 14/10/2026, com atualizações identificadas (`→ Vigente`).
 
 - **Baseline/Design Freeze:** o **merge do PR exclusivamente documental ocorreu** (PR #33, `e4f2aa5`; **[FATO-L]**, revalidado em 14/10/2026). A **aprovação explícita dos documentos como baseline pelo Arquiteto-Chefe não está registrada ⇒ PENDENTE.** **Design Freeze não declarado.**
-- **Bloco A:** **P1, P3, P5 e P12 aprovadas** e **P7/P8/P9 confirmadas fora do escopo** (registro nas instruções do Arquiteto-Chefe de 14/10/2026, não versionado no repositório). **PENDENTES:** aprovação da baseline e **autorização formal do Arquiteto-Chefe** para iniciar o bloco, após auditoria. A verificação de Node (≥ 22.12) e `pnpm` 11.11.0 no Windows continua a registrar no relatório de A. TTL: referência local `7d` (604.800 s) registrada como **[INFO]**; demais ambientes a confirmar antes da implantação (ver nota de TTL).
-- **Bloco B1:** depende da **conclusão e aprovação de A**, da **decisão O7** e da **aprovação de P10 para o subconjunto `end`**.
+- **Bloco A:** **P1, P3, P5 e P12 aprovadas** e **P7/P8/P9 confirmadas fora do escopo** (registro nas instruções do Arquiteto-Chefe de 14/10/2026, não versionado no repositório). **PENDENTES em 14/10/2026:** aprovação da baseline e **autorização formal do Arquiteto-Chefe** para iniciar o bloco, após auditoria. **→ Vigente em 21/10/2026: Bloco A concluído, integrado (PR #35) e com resultado técnico aprovado; a aprovação da baseline segue PENDENTE.** A verificação de Node (≥ 22.12) e `pnpm` 11.11.0 no Windows continua a registrar no relatório de A. TTL: referência local `7d` (604.800 s) registrada como **[INFO]**; demais ambientes a confirmar antes da implantação (ver nota de TTL).
+- **Bloco B1:** depende da **conclusão e aprovação de A**, da **decisão O7** e da **aprovação de P10 para o subconjunto `end`**. **→ Vigente em 21/10/2026: as três dependências estão registradas; B1 autorizado de forma condicionada (ADR-014, registro final).**
 - **Bloco C:** depende da **conclusão e aprovação de A e B1**.
 - **Bloco B2:** depende da **aprovação de B1**, da **decisão P2**, da **política de renovação de P10** e da **decisão P11**; **se O2 for adotada**, exige também **smoke tests de navegador para HIP-17/HIP-18**; **se E-A for adotada**, exige a **correção prévia da API** e a **reavaliação de P11**.
 - **Implantação além de uso individual/desenvolvimento:** depende das **condições comuns** de segurança e operação (ADR §5.7) e da **resolução de O1b** ou de **aceite explícito, informado e documentado** do risco residual. P9 (CI do frontend, fora desta sprint) **bloqueia a prontidão para produção**.
 
 Cada bloco, futuramente, exige **branch e PR próprios, validação documentada e aprovação explícita antes de avançar ao seguinte**. O estado de cada decisão P1–P12 e de O7 está
-na ADR-014 ("Estado das decisões"); P2, P4, P6, P10 e P11 e O7 **permanecem pendentes**; **recomendação técnica não é decisão aprovada**.
+na ADR-014 ("Estado das decisões"); P2, P4, P6, P10 e P11 e O7 **permaneciam pendentes em 14/10/2026**; **recomendação técnica não é decisão aprovada**. **→ Vigente em 21/10/2026: O7 e P10 (`end`) aprovadas; P2, P4, P6 e P11 seguem pendentes; P10 `renew`/`unavailable` segue pendente.**
 
 ## Riscos
 
@@ -363,9 +372,11 @@ rate limiting; deploy/proxy reverso (`serverActions.allowedOrigins`).
 
 ## Estado de aprovação
 
+> **Os dois parágrafos abaixo, até o subtítulo "Evidência de CI — SPR-015 Bloco A", são o estado em 14/10/2026 (HISTÓRICO).** Vigente em 21/10/2026: ver o bloco "Estado vigente" no início deste documento. Onde divergem, vale o vigente.
+
 **Decisões individuais:** P1, P3, P5 e P12 aprovadas; P7, P8 e P9 confirmadas fora do escopo do Bloco A; demais pendentes (ver ADR-014).
 **Revisão 8 como baseline: aprovação não registrada.** **Design Freeze não declarado** (o bloco `DESIGN FREEZE — SPR-015` só existirá, no padrão das SPR anteriores, **depois**
-da aprovação explícita da baseline pelo Arquiteto-Chefe; o merge do PR documental já ocorreu e **não** substitui essa aprovação). **Autorização do Bloco A: não concedida.**
+da aprovação explícita da baseline pelo Arquiteto-Chefe; o merge do PR documental já ocorreu e **não** substitui essa aprovação). **Autorização do Bloco A: não concedida em 14/10/2026** (Bloco A posteriormente integrado — PR #35 — e com resultado técnico aprovado em 21/10/2026).
 
 ### Evidência de CI — SPR-015 Bloco A
 
@@ -380,3 +391,6 @@ da aprovação explícita da baseline pelo Arquiteto-Chefe; o merge do PR docume
 - **Conclusão:** o CI associado ao PR #35 foi concluído com sucesso.
 
 **Limitação:** essa evidência comprova a execução bem-sucedida do CI do PR. Isoladamente, não comprova que os testes foram executados novamente após o merge no `main` nem identifica a revisão exata testada.
+
+**Nota de 21/10/2026 sobre o alcance dessa evidência:** o `ci.yml` executa somente passos de `apps/api` (`pnpm --filter api ...`) **[FATO-L]**; por isso o CI da PR #35 **não comprova** lint, testes, `check-types` ou build do `apps/web`. A evidência técnica do `apps/web` no Bloco A é a **execução local relatada em 21/10/2026** (183 testes aprovados; lint sem erros exibidos; `check-types` com saída 0; build
+bem-sucedido), que o Engenheiro **não** verificou de forma independente neste registro. Aprovação do resultado técnico do Bloco A pelo Arquiteto-Chefe: ver o bloco "Estado vigente" no início deste documento.
