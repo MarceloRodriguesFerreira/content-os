@@ -17,7 +17,7 @@ versionadas no repositório**. Esta tabela **prevalece** sobre a tabela históri
 | 3 | Integração dos documentos na `main` | **Ocorreu** — PR #33, merge `e4f2aa5` | **[FATO-L]** |
 | 4 | Bloco A | **Concluído e integrado** — PR #35, merge `fe58c24c0916222a1738bb6e2d9b67dacdf8b7c1` (pais `13c4d82` e `a6624dd`) | **[FATO-L]** (histórico do Git) |
 | 5 | Resultado técnico do Bloco A | **Aprovado pelo Arquiteto-Chefe**, com base em **execução local relatada em 21/10/2026**: 183 testes aprovados, lint sem erros exibidos, `check-types` com saída 0 e build bem-sucedido. **Não é CI pós-merge**; o Engenheiro **não** verificou essas execuções de forma independente neste registro | Instruções do Arquiteto-Chefe e relato de execução local (21/10/2026) |
-| 6 | Bloco B1 | **Autorizado de forma condicionada** (pré-condições e critérios de bloqueio no registro ao final deste documento). **Código não iniciado** | Instruções do Arquiteto-Chefe (21/10/2026) |
+| 6 | Bloco B1 | **Autorizado de forma condicionada** (pré-condições e critérios de bloqueio no registro ao final deste documento). **Código não iniciado.** **B1 não liberado:** a autorização depende da integração do registro documental de 22/10/2026 na `main` e da validação do estado-base no Windows | Instruções do Arquiteto-Chefe (21/10 e 22/10/2026) |
 | 7 | Blocos B2 e C | **B2 bloqueado e fora do B1.** **C** depende de A e B1 aprovados (B1 ainda não executado) | Backlog; instruções (21/10/2026) |
 
 ### Estado na revisão 8 (14/10/2026) — HISTÓRICO
@@ -253,7 +253,7 @@ chama a API, não grava cookies; valida `next` e `mode` — lista fechada):**
 
 | `mode` | Bloco | Comportamento |
 |---|---|---|
-| `end` | B1 | formulário `POST /api/session/end` com envio único automático (botão de contingência sem JavaScript); **encerra a sessão local sem chamar a API**; destino `/login?reason=session` |
+| `end` | B1 | formulário `POST /api/session/end` com envio único automático (botão de contingência sem JavaScript); **encerra a sessão local sem chamar a API**; destino `/login?reason=session`; *log do `end`: ver AC-33.1 (complemento de 22/10/2026)* |
 | `renew` | B2 | formulário `POST /api/session/renew` com `next` oculto; **tenta renovar**; sucesso ⇒ `303` ao `next` validado |
 | `unavailable` | B2 | exibe "serviço indisponível" e botão "Tentar novamente" (`renew`); **sem envio automático** |
 
@@ -464,7 +464,7 @@ são removidos (mesmo `Path`) na mesma resposta em todos os desfechos.** Quatro 
 
 Em `unconfirmed`, `unknown` e `not_revoked_by_call` o refresh token pode seguir válido no servidor até expirar; o cliente não tem como
 saber. Sem fila de reenvio (exigiria infraestrutura). Nenhuma mensagem afirma revogação, nem que "nada foi revogado". O log registra as
-dimensões 1–3, sem tokens.
+dimensões 1–3, sem tokens. *(Complemento de 22/10/2026: o log do `end` é regido pelo AC-33.1; ver "Registro de decisões posteriores à revisão 8", D-9.)*
 
 ### 8. Validação de origem (CSRF) nos Route Handlers — P12 — [APROV] (regra central); detalhamento [PROP]
 
@@ -562,7 +562,7 @@ concorrentes (RA-2, §5) e as decisões P10/P11 **permanecem explicitamente pend
 
 - **Baseline/Design Freeze:** o **merge do PR exclusivamente documental ocorreu** (PR #33, `e4f2aa5`; **[FATO-L]**, revalidado em 14/10/2026). A **aprovação explícita dos documentos como baseline pelo Arquiteto-Chefe não está registrada ⇒ PENDENTE.** **Design Freeze não declarado.**
 - **Bloco A:** **P1, P3, P5 e P12 aprovadas** e **P7/P8/P9 confirmadas fora do escopo** (registro nas instruções do Arquiteto-Chefe de 14/10/2026, não versionado no repositório). **PENDENTES em 14/10/2026:** aprovação da baseline e **autorização formal do Arquiteto-Chefe** para iniciar o bloco, após auditoria. **→ Vigente em 21/10/2026: Bloco A concluído, integrado (PR #35) e com resultado técnico aprovado; a aprovação da baseline segue PENDENTE.** A verificação de Node (≥ 22.12) e `pnpm` 11.11.0 no Windows continua a registrar no relatório de A. TTL: referência local `7d` (604.800 s) registrada como **[INFO]**; demais ambientes a confirmar antes da implantação (ver nota de TTL).
-- **Bloco B1:** depende da **conclusão e aprovação de A**, da **decisão O7** e da **aprovação de P10 para o subconjunto `end`**. **→ Vigente em 21/10/2026: as três dependências estão registradas (A aprovado; O7 e P10 `end` aprovadas); B1 autorizado de forma condicionada.**
+- **Bloco B1:** depende da **conclusão e aprovação de A**, da **decisão O7** e da **aprovação de P10 para o subconjunto `end`**. **→ Vigente em 21/10/2026: as três dependências estão registradas (A aprovado; O7 e P10 `end` aprovadas); B1 autorizado de forma condicionada.** **Em 22/10/2026: a autorização continua condicionada à integração do registro de 22/10/2026 e à validação do estado-base no Windows; B1 não liberado.**
 - **Bloco C:** depende da **conclusão e aprovação de A e B1**.
 - **Bloco B2:** depende da **aprovação de B1**, da **decisão P2**, da **política de renovação de P10** e da **decisão P11**; **se O2 for adotada**, exige também **smoke tests de navegador para HIP-17/HIP-18**; **se E-A for adotada**, exige a **correção prévia da API** e a **reavaliação de P11**.
 - **Implantação além de uso individual/desenvolvimento:** depende das **condições comuns** de segurança e operação (ADR §5.7) e da **resolução de O1b** ou de **aceite explícito, informado e documentado** do risco residual. P9 (CI do frontend, fora desta sprint) **bloqueia a prontidão para produção**.
@@ -656,6 +656,21 @@ versionadas no repositório**. **Status de arquivo da ADR: `Proposed`, inalterad
 | D-6 | **P2, P4, P6 e P11 permanecem pendentes**, salvo evidência documental explícita em contrário | Nenhuma aprovação inferida |
 | D-7 | **O resultado técnico do Bloco A foi aprovado** pelo Arquiteto-Chefe com base nas evidências apresentadas | Evidências: execução **local relatada em 21/10/2026** (183 testes aprovados; lint sem erros exibidos; `check-types` com saída 0; build bem-sucedido). **Não é CI pós-merge**; não verificada de forma independente pelo Engenheiro neste registro |
 
+### Decisões complementares sobre o B1 — registro de 22/10/2026
+
+**Data do registro:** 22/10/2026 (preparação do patch documental). **Data original das decisões:** **desconhecida**. **Fonte:** instruções do Arquiteto-Chefe, **não versionadas**. Estas decisões **acrescentam** às D-1 a D-7; não
+alteram o texto da revisão 8.
+
+| # | Decisão | Alcance |
+|---|---|---|
+| D-8 | **Lista oficial de critérios do B1: 25 identificadores = 22 específicos + 3 transversais (AC-36, AC-46, AC-47)** | **Específicos (22):** AC-06, 07, 08, 10, 11, 12, 15.8, 15.9, 15.11, 27.1, 28.1, 29, 30, 31, 33, 33.1, 34, 34.1, 40, 41, 42, 44. O **AC-33.1** é critério específico **independente**, com verificação própria; não faz parte do AC-33. **Transversais (3):** AC-36, AC-46 e AC-47, que valem para todos os blocos (A, B1, C, B2) |
+| D-9 | **AC-33 cobre o log do logout; AC-33.1 cobre o log do `end`** (identificador independente, critério específico, D-8) | **AC-33 (logout):** o log registra resposta observada, estado de revogação remota e limpeza dos cookies, **sem** tokens (`logout.test.ts`). **AC-33.1 (`end`):** o log registra o **evento `end`**, **nenhuma chamada à API**, revogação remota **`not_attempted`**, **cookies removidos** e **ausência de tokens** (teste previsto `end.test.ts`; o nome é previsão). Complementa o §4 (`end`) e o §7 (log); `not_attempted` é valor já definido no §7 |
+| D-10 | **AC-36:** "nenhuma chamada de rede (`fetch`) fora de `api-client.ts`, excluindo testes" | Substitui a redação da revisão 8 (verificação por `API_BASE_URL`), que não se sustentava no código integrado |
+| D-11 | **AC-46:** exigir explicitamente `test`, `lint`, `check-types` e `build` | Resultados reais registrados; sem declaração de execução neste registro |
+| D-12 | **AC-47:** toda alteração em arquivo do Bloco A deve ser **identificada, justificada e autorizada explicitamente antes da execução** | Além do escopo proibido já existente (`apps/api`, `turbo.json`, `package.json` da raiz, `ci.yml`) |
+| D-13 | **AC-40:** aprovada a **alteração aditiva mínima** em `messages.ts` e `messages.test.ts`, com a mensagem **"Sua sessão terminou. Entre novamente."** | Uma chave nova na lista fechada e a atualização da asserção de conteúdo exato; **esta autorização não permite outras alterações no Bloco A** (nenhum outro arquivo, nenhuma outra chave, nenhum outro teste alterado) |
+| D-14 | **A autorização de implementação do B1 continua condicionada** à integração deste registro documental na `main` e à validação do estado-base no Windows | **B1 não liberado** por este registro |
+
 ### Evidência do Bloco A
 
 - **[FATO-L]** Bloco A integrado à `main` pela **PR #35** (merge `fe58c24c0916222a1738bb6e2d9b67dacdf8b7c1`, 21/10/2026; pais `13c4d82` e `a6624dd`), conforme o histórico do Git.
@@ -669,7 +684,8 @@ versionadas no repositório**. **Status de arquivo da ADR: `Proposed`, inalterad
 Conforme o backlog (`engineering/backlog/SPR-015.md`, "Bloco B1") e o §4 desta ADR, subconjunto `end`: login (`lib/server/login.ts`, Server Action fina, página `/login` mínima); `proxy.ts` (presença de
 `cos_access`, somente navegação); `GET /session/continue` **apenas `mode=end`** com componente de envio único e `continue-model.ts` (modo `end`); `POST /api/session/end` (só `POST`, origem validada, remove
 `cos_access` e `cos_refresh`, **não** chama a API, `303`); `POST /api/session/logout` **sem renovação** (L1, L4, L5, L6, L7′, L9); DAL com **`401` ⇒ `/session/continue?mode=end` sempre**; e os testes
-listados no backlog. Os critérios de aceite do B1 são as linhas marcadas **B1** da matriz do Design Doc.
+listados no backlog. Os critérios de aceite do B1 são os **25 identificadores oficiais** da decisão D-8 (**22 específicos, incluindo o AC-33.1, + 3 transversais**), com AC-33 (logout) e AC-33.1 (`end`) como critérios independentes (D-9); a matriz do
+Design Doc os distingue. Inclui a alteração aditiva autorizada em D-13 (`messages.ts` e `messages.test.ts`), e **somente ela**, no Bloco A.
 
 ### Fora do B1 (B2, sem autorização)
 
@@ -683,15 +699,18 @@ Bloco C e Bloco B2.
 
 ### Pré-condições para iniciar o código do B1 (todas obrigatórias)
 
-1. Este registro e a reconciliação dos três documentos **integrados à `main`** por **branch → PR → revisão → merge**, sem push direto.
-2. Confirmação, antes de qualquer código, de que **não há contradição arquitetural** entre ADR-014, Design Doc e backlog quanto a escopo e limites B1 × B2, **incluindo a resolução dos pontos abertos** abaixo, com o resultado
+1. Os registros documentais de 21/10/2026 (**integrado**: PR #37) e de 22/10/2026 (**pendente de integração**) e a reconciliação dos três documentos **integrados à `main`** por **branch → PR → revisão → merge**, sem push direto.
+2. Confirmação, antes de qualquer código, de que **não há contradição arquitetural** entre ADR-014, Design Doc e backlog quanto a escopo e limites B1 × B2, **incluindo a resolução dos pontos abertos** abaixo (tratados pelas decisões D-8 a D-13; **a confirmação só pode ser feita após a integração do registro de 22/10/2026**), com o resultado
    apresentado ao Arquiteto-Chefe.
-3. **Critérios de aceite do B1** (matriz do Design Doc e backlog) lidos e confirmados como suficientes e consistentes.
+3. **Critérios de aceite do B1** (lista oficial D-8: 25 identificadores; matriz do Design Doc e backlog) lidos e confirmados como suficientes e consistentes.
 4. **Estado-base do B1 verificado antes do código:** `git status` limpo, `origin/main` atualizado e `pnpm --filter web lint`, `check-types`, `build` e `test` executados, com resultados reais registrados (a evidência
    do Bloco A acima é de execução local relatada e não dispensa essa verificação).
 5. **Branch exclusiva** a partir de `origin/main` atualizado (`feature/<nome>`, conforme `CONTRIBUTING.md`) e **PR própria**; sem push direto; sem commit, push, PR ou merge sem autorização.
 
-### Pontos abertos identificados na verificação dos critérios do B1 (21/10/2026)
+### Pontos abertos identificados na verificação dos critérios do B1 (21/10/2026 — HISTÓRICO)
+
+> **Situação em 22/10/2026:** os itens abaixo são o registro de 21/10/2026 e foram **tratados pelas decisões D-8 a D-13** (lista oficial, AC-33/33.1, AC-36, AC-40, AC-46, AC-47). Permanece **pendente** a
+> confirmação de ausência de contradições (pré-condição 2) após a integração do registro de 22/10/2026.
 
 Verificação documental, **sem execução de código**: os identificadores de critério do backlog ("Bloco B1", Testes) foram conferidos individualmente contra o Design Doc, esta ADR e o backlog.
 
@@ -706,10 +725,10 @@ Verificação documental, **sem execução de código**: os identificadores de c
 ### Critérios que bloqueiam o início (parar e reportar ao Arquiteto-Chefe)
 
 Contradição entre os três documentos sobre escopo ou limites B1 × B2; necessidade de renovação, rotação ou `cos_renewed` para cumprir um critério do B1; necessidade de alterar `apps/api`, `turbo.json`, `package.json` da raiz
-ou `ci.yml`; **necessidade de alterar contrato já aprovado do Bloco A (incluindo `messages.ts`) sem necessidade demonstrada e autorização**; pré-condição não satisfeita; working tree sujo sem identificação; falha dos scripts
+ou `ci.yml`; **necessidade de alterar contrato já aprovado do Bloco A (incluindo `messages.ts`) além da alteração aditiva autorizada em D-13, ou sem identificação, justificativa e autorização explícita prévia (AC-47)**; pré-condição não satisfeita; working tree sujo sem identificação; falha dos scripts
 no estado-base.
 
 ### O que este registro não faz
 
-Não declara Design Freeze; **não aprova a revisão 8 como baseline**; não aprova P2, P4, P6, P11 nem a política de renovação de P10; não declara CI pós-merge nem testes executados pelo Engenheiro; não autoriza código
+Não declara Design Freeze; **não aprova a revisão 8 como baseline**; não aprova P2, P4, P6, P11 nem a política de renovação de P10; não declara CI pós-merge nem testes executados pelo Engenheiro; **não libera o B1**; **não autoriza alterações no Bloco A além da de D-13**; não autoriza código
 fora do escopo do B1; não substitui as pré-condições acima.
