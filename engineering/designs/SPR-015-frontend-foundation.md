@@ -11,6 +11,8 @@ aprovação da revisão 8, integração na `main`, autorização do Bloco A e ap
 > **local relatada** em 21/10/2026 (183 testes aprovados; lint sem erros exibidos; `check-types` com saída 0; build bem-sucedido), **não** CI pós-merge. **O7 aprovada; P10 aprovada só para `end`.** **Bloco B1:** autorizado de
 > forma condicionada (pré-condições na ADR-014); código não iniciado. **B2:** bloqueado, fora do B1. **P2, P4, P6 e P11:** pendentes. **Aprovação da revisão 8 como baseline: PENDENTE; Design Freeze: não declarado** (a revisão 8 é
 > a referência técnica para o B1, sem aprovação automática como baseline). Registro completo: seção "Registro de decisões posteriores à revisão 8" da ADR-014.
+>
+> **Atualização de 22/10/2026** (data do **registro**; a **data original** das decisões é **desconhecida**; fonte: instruções do Arquiteto-Chefe, não versionadas). O Arquiteto-Chefe decidiu: lista oficial do B1 = **25 identificadores: 22 critérios específicos (os 21 anteriormente listados + AC-33.1) + 3 transversais (AC-36, AC-46, AC-47)**; **AC-33** cobre o log do logout e **AC-33.1**, critério independente com verificação própria, o log do `end`; nova redação do **AC-36**; **AC-46** exige `test`, `lint`, `check-types` e `build`; **AC-47** exige identificação, justificativa e autorização explícita de toda alteração em arquivo do Bloco A; **AC-40** com alteração aditiva mínima autorizada em `messages.ts` e `messages.test.ts` (mensagem "Sua sessão terminou. Entre novamente."), **sem autorizar outras alterações no Bloco A**. **B1 não está liberado:** a autorização segue condicionada à integração desse registro na `main` e à validação do estado-base no Windows. Baseline pendente, Design Freeze não declarado, P2, P4, P6 e P11 pendentes. Registro completo: ADR-014, seção "Registro de decisões posteriores à revisão 8" (D-8 a D-14).
 
 Decisões de arquitetura: `engineering/adr/ADR-014-frontend-authentication-and-session.md` (mesmo estado documental; ver Status) — contém a legenda
 de estados, os fatos F1–F27, as hipóteses HIP-1…24, os riscos RA-* e a comparação P2. Backlog: `engineering/backlog/SPR-015.md` (proposta).
@@ -220,8 +222,12 @@ essas execuções.
 
 ## Matriz de critérios de aceite × testes (revisão 8)
 
-Todos os critérios são **[PROP]**; **nenhum foi executado**. U / I / M como acima. **Bloco**: A, B1 (sessão sem renovação), C (telas), B2 (renovação). "Arquivo" é previsão. A coluna **Não prova**
+Todos os critérios são **[PROP]**; **nenhum foi executado** (texto de 14/10/2026; os critérios do B1 seguem **[PROP]**, sem execução; para o Bloco A há execução local relatada em 21/10/2026). U / I / M como acima. **Bloco**: A, B1 (sessão sem renovação), C (telas), B2 (renovação). "Arquivo" é previsão. A coluna **Não prova**
 lembra o limite do nível. Variantes `NN.1` existem quando o critério muda entre B1/C e B2.
+
+**Categorias dos critérios do B1 (decisão de 22/10/2026, ADR-014 D-8):** **22 específicos** — AC-06, 07, 08, 10, 11, 12, 15.8, 15.9, 15.11, 27.1, 28.1, 29, 30, 31, 33, 33.1, 34, 34.1, 40, 41, 42, 44 — e **3 transversais** —
+AC-36, 46 e 47, marcados "(transversal)" na coluna **Bloco** e válidos para todos os blocos. Total oficial: **25 identificadores**. O **AC-33.1** (log do `end`) é critério específico **independente** do AC-33 (log do logout),
+com verificação própria (`end.test.ts`).
 
 | AC | Bloco | Critério verificável | Nível | Arquivo | Não prova |
 |---|---|---|---|---|---|
@@ -277,17 +283,18 @@ lembra o limite do nível. Variantes `NN.1` existem quando o critério muda entr
 | 31 | B1 | Em **todos** os desfechos de logout de B1 há `Set-Cookie` de remoção de `cos_access` e `cos_refresh` com `Path` correto | I | `logout.int.test.ts` | remoção efetiva no navegador |
 | 31.1 | B2 | Idem, incluindo `cos_renewed` | I | `logout.int.test.ts` | idem |
 | 32 | A | Mensagens de lista fechada; nenhuma contém "revogad" nem "nada foi revogado"; nenhuma contém token, stack, `path` ou `message` crua da API | U | `messages.test.ts` | — |
-| 33 | B1 | Log de servidor (logout/`end`) registra observado/revogação/cookies **sem** tokens | U | `logout.test.ts` | — |
+| 33 | B1 | Log de servidor do **logout** registra resposta observada, estado de revogação remota e limpeza dos cookies, **sem** tokens | U | `logout.test.ts` | — |
+| 33.1 | B1 | Log de servidor do **`end`** registra o **evento `end`**, **nenhuma chamada à API**, revogação remota **`not_attempted`**, **cookies removidos** e **ausência de tokens** (decisão de 22/10/2026; critério independente do AC-33) | U | `end.test.ts` | — |
 | 34 | B1 | Proxy: sem `cos_access` ⇒ `/login?next=`; com cookie segue; matcher exclui `_next`, estáticos, `/login`, `/session/*`, `/api/session/*` [HIP-9] | U | `proxy.test.ts` | execução pelo Next |
 | 34.1 | B1 | Cookie `cos_access` **presente porém inválido/obsoleto/forjado**: o Proxy **não** bloqueia a navegação; a API simulada responde `401`; o DAL encaminha a `mode=end`; cookies removidos; **a presença do cookie não é tratada como sessão válida** | I | `session.int.test.ts` | Proxy executado pelo Next |
 | 35 | A | DAL: `2xx/401/403/404/400/5xx/rede/timeout/corpo inválido` ⇒ classificação da ADR §3; sempre `Bearer`, `cache: 'no-store'`, timeout; `403` e `5xx` **não** removem cookies nem renovam | U, I | `api-client.test.ts`, `api-client.int.test.ts` | — |
-| 36 | A, B1, C, B2 | Nenhum arquivo fora de `config.ts`/`api-client.ts` acessa a API: `git grep -nE --untracked "API_BASE_URL" -- apps/web` lista só esses (comando **proposto**, não executado) | U (revisão) | relatório do bloco | — |
+| 36 | A, B1, C, B2 *(transversal)* | **Nenhuma chamada de rede (`fetch`) fora de `api-client.ts`, excluindo testes** (redação de 22/10/2026; a verificação por `API_BASE_URL` da revisão 8 foi **substituída**). Comando **proposto**, não executado: `git grep -nE "\bfetch\b" -- apps/web ':!*.test.ts'` deve listar só `api-client.ts` | U (revisão) | relatório do bloco | chamadas de rede por outros meios que não `fetch` (revisão manual) |
 | 37 | C | `/v1/users/me`: `5xx`/rede ⇒ página renderiza sem nome + aviso; `401` ⇒ `end` | I | `session.int.test.ts` | renderização real |
 | 37.1 | B2 | `401` em `/v1/users/me` ⇒ etapa de renovação | I | `session.int.test.ts` | idem |
 | 38 | C | Listar Projects: `401` ⇒ `end`; `403` ⇒ "sem permissão"; `5xx`/rede/corpo inválido ⇒ mensagem + tentar de novo, sem lista parcial | I | `projects.int.test.ts` | idem |
 | 38.1 | B2 | `401` ⇒ etapa de renovação | I | `projects.int.test.ts` | idem |
 | 39 | C | Criar Project: `201` ⇒ aparece na lista; `400` ⇒ erros por campo, valores preservados; `401` ⇒ `session-expired` com URL da etapa (`end`); `5xx`/rede ⇒ mensagem genérica, formulário preservado | I | `projects.int.test.ts` | idem |
-| 40 | B1 | `/login?reason=session` exibe texto neutro; valores fora da lista ignorados | U | `messages.test.ts` | — |
+| 40 | B1 | `/login?reason=session` exibe **"Sua sessão terminou. Entre novamente."** (chave aditiva na lista fechada de `messages.ts`; AC-32 se aplica); valores de `reason` fora da lista são ignorados (`parseReason`, Bloco A, `safe-next.test.ts`). **Alteração aditiva em `messages.ts` e `messages.test.ts` autorizada em 22/10/2026 (ADR-014, D-13); nenhuma outra alteração no Bloco A** | U | `messages.test.ts` | — |
 | 40.1 | B2 | `reason=renewal` exibe texto distinto e neutro | U | `messages.test.ts` | — |
 | 41 | B1 | Smoke: `GET /session/continue?mode=end` **sem** `Set-Cookie` e **sem** chamada à API (log da API); envio automático **uma vez** (dev e produção); sem JavaScript o botão funciona [HIP-13] | M | relatório | — |
 | 41.1 | B2 | Idem para `mode=renew` | M | relatório | — |
@@ -300,8 +307,8 @@ lembra o limite do nível. Variantes `NN.1` existem quando o critério muda entr
 | 44 | B1 | Smoke de cookies: atributos corretos no DevTools; após logout/`end` **ausentes** (mesmo `Path`); Voltar não mostra conteúdo autenticado [HIP-3, HIP-6] | M | relatório | — |
 | 44.1 | B2 | Após a renovação os três cookies são regravados | M | relatório | — |
 | 45 | A | `pnpm --filter web test` conforme tabela de comandos (script presente, N ≥ 1, 0 failed) | — | Bloco A | — |
-| 46 | A, B1, C, B2 | `lint`, `check-types`, `build` conforme tabela de comandos | — | todos os blocos | Windows até execução |
-| 47 | A, B1, C, B2 | Escopo: nenhum arquivo proibido alterado (comando da tabela) | — | todos os blocos | — |
+| 46 | A, B1, C, B2 *(transversal)* | **`test`, `lint`, `check-types` e `build`** executados conforme a tabela de comandos, com resultados reais registrados | — | todos os blocos | Windows até execução |
+| 47 | A, B1, C, B2 *(transversal)* | Escopo: nenhum arquivo proibido alterado (comando da tabela) **e** toda alteração em arquivo do Bloco A **identificada, justificada e autorizada explicitamente antes da execução** (no B1, a única autorizada é a de AC-40/D-13 em `messages.ts` e `messages.test.ts`). Comando **proposto**, não executado: comparar `git diff --name-only origin/main...HEAD` com `git diff --name-only 13c4d82 fe58c24` (arquivos do Bloco A) | — | todos os blocos | — |
 
 ### Smoke manual (M) contra a API real — checklist (Windows, PowerShell; comandos **propostos**, **não executados**)
 
@@ -352,7 +359,7 @@ e o histórico. O conteúdo documental da revisão 8 foi integrado à `main` pel
 
 - **Baseline/Design Freeze:** o **merge do PR exclusivamente documental ocorreu** (PR #33, `e4f2aa5`; **[FATO-L]**, revalidado em 14/10/2026). A **aprovação explícita dos documentos como baseline pelo Arquiteto-Chefe não está registrada ⇒ PENDENTE.** **Design Freeze não declarado.**
 - **Bloco A:** **P1, P3, P5 e P12 aprovadas** e **P7/P8/P9 confirmadas fora do escopo** (registro nas instruções do Arquiteto-Chefe de 14/10/2026, não versionado no repositório). **PENDENTES em 14/10/2026:** aprovação da baseline e **autorização formal do Arquiteto-Chefe** para iniciar o bloco, após auditoria. **→ Vigente em 21/10/2026: Bloco A concluído, integrado (PR #35) e com resultado técnico aprovado; a aprovação da baseline segue PENDENTE.** A verificação de Node (≥ 22.12) e `pnpm` 11.11.0 no Windows continua a registrar no relatório de A. TTL: referência local `7d` (604.800 s) registrada como **[INFO]**; demais ambientes a confirmar antes da implantação (ver nota de TTL).
-- **Bloco B1:** depende da **conclusão e aprovação de A**, da **decisão O7** e da **aprovação de P10 para o subconjunto `end`**. **→ Vigente em 21/10/2026: as três dependências estão registradas; B1 autorizado de forma condicionada (ADR-014, registro final).**
+- **Bloco B1:** depende da **conclusão e aprovação de A**, da **decisão O7** e da **aprovação de P10 para o subconjunto `end`**. **→ Vigente em 21/10/2026: as três dependências estão registradas; B1 autorizado de forma condicionada (ADR-014, registro final).** **Em 22/10/2026: a autorização continua condicionada à integração do registro de 22/10/2026 e à validação do estado-base no Windows; B1 não liberado.**
 - **Bloco C:** depende da **conclusão e aprovação de A e B1**.
 - **Bloco B2:** depende da **aprovação de B1**, da **decisão P2**, da **política de renovação de P10** e da **decisão P11**; **se O2 for adotada**, exige também **smoke tests de navegador para HIP-17/HIP-18**; **se E-A for adotada**, exige a **correção prévia da API** e a **reavaliação de P11**.
 - **Implantação além de uso individual/desenvolvimento:** depende das **condições comuns** de segurança e operação (ADR §5.7) e da **resolução de O1b** ou de **aceite explícito, informado e documentado** do risco residual. P9 (CI do frontend, fora desta sprint) **bloqueia a prontidão para produção**.
